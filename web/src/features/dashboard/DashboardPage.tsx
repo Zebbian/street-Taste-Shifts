@@ -49,8 +49,8 @@ export function DashboardPage() {
       {isLoading ? (
         <p className="text-sm text-neutral-500">Loading payroll…</p>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
+          <table className="w-full min-w-[520px] text-sm">
             <thead className="bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
               <tr>
                 <th className="px-4 py-2">Staff member</th>
