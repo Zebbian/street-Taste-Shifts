@@ -1,0 +1,48 @@
+export type Role = 'MANAGER' | 'STAFF'
+
+export type Position = 'SERVER' | 'BARTENDER' | 'LINE_COOK' | 'HOST' | 'DISHWASHER' | 'MANAGER'
+
+export interface User {
+  id: string
+  email: string
+  fullName: string
+  role: Role
+  position: Position
+  hourlyRateCents: number | null
+  active: boolean
+  createdAt: string
+}
+
+export interface ShiftStaffSummary {
+  id: string
+  fullName: string
+  position: Position
+}
+
+export interface Shift {
+  id: string
+  staffId: string
+  staff: ShiftStaffSummary
+  startsAt: string
+  endsAt: string
+  position: Position
+  hourlyRateCentsSnapshot: number
+  notes: string | null
+  createdById: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PayrollEntry {
+  staffId: string
+  fullName: string
+  position: Position
+  totalMinutes: number
+  totalCents: number
+  shiftCount: number
+  totalHours: number
+}
+
+export interface ApiErrorBody {
+  error: { code: string; message: string }
+}
