@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MANAGER
+  STAFF
+}
+
+enum Position {
+  SERVER
+  BARTENDER
+  LINE_COOK
+  HOST
+  DISHWASHER
+  MANAGER
+}
+
+model User {
+  id              String   @id @db.Uuid
+  email           String   @unique
+  fullName        String
+  role            Role     @default(STAFF)
+  position        Position @default(SERVER)
+  hourlyRateCents Int?
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  shifts         Shift[] @relation("StaffShifts")
+  shiftsCreated  Shift[] @relation("CreatedShifts")
+
+  @@map("users")
+}
+
+model Shift {
+  id                     String   @id @default(uuid()) @db.Uuid
+  staffId                String   @db.Uuid
+  staff                  User     @relation("StaffShifts", fields: [staffId], references: [id], onDelete: Restrict)
+  startsAt               DateTime
+  endsAt                 DateTime
+  position               Position
+  hourlyRateCentsSnapshot Int
+  notes                  String?
+  createdById            String   @db.Uuid
+  createdBy              User     @relation("CreatedShifts", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@index([staffId])
+  @@index([startsAt])
+  @@map("shifts")
+}
