@@ -25,7 +25,7 @@ const SEED_ACCOUNTS: Array<{
   position: Position
   hourlyRateCents: number | null
 }> = [
-  { email: 'manager@streettaste.com', fullName: 'Dana Ortiz', role: Role.MANAGER, position: Position.MANAGER, hourlyRateCents: null },
+  { email: 'sebastian.arbelaez.dev@gmail.com', fullName: 'Dana Ortiz', role: Role.MANAGER, position: Position.MANAGER, hourlyRateCents: null },
   { email: 'alex.chen@streettaste.com', fullName: 'Alex Chen', role: Role.STAFF, position: Position.BARTENDER, hourlyRateCents: 1900 },
   { email: 'morgan.lee@streettaste.com', fullName: 'Morgan Lee', role: Role.STAFF, position: Position.SERVER, hourlyRateCents: 1650 },
   { email: 'sam.patel@streettaste.com', fullName: 'Sam Patel', role: Role.STAFF, position: Position.LINE_COOK, hourlyRateCents: 1800 },
