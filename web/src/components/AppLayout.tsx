@@ -6,18 +6,21 @@ export function AppLayout() {
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `rounded-lg px-3 py-2 text-sm font-medium transition ${
-      isActive ? 'bg-neutral-900 text-white' : 'text-neutral-600 hover:bg-neutral-100'
+      isActive ? 'bg-brand-600 text-white' : 'text-neutral-300 hover:bg-white/10 hover:text-white'
     }`
 
   return (
     <div className="min-h-screen bg-neutral-50">
-      <header className="border-b border-neutral-200 bg-white">
+      <header className="border-b-2 border-gold-400 bg-ink-900">
         <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center justify-between gap-6 sm:justify-start">
-            <span className="text-base font-semibold text-neutral-900">Street Taste</span>
+            <span className="flex items-center gap-2 text-base font-semibold text-white">
+              <span className="inline-block h-2 w-2 rounded-full bg-gold-400" aria-hidden="true" />
+              Street Taste
+            </span>
             <button
               onClick={signOut}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-600 hover:bg-neutral-100 sm:hidden"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-300 hover:bg-white/10 hover:text-white sm:hidden"
             >
               Sign out
             </button>
@@ -38,10 +41,10 @@ export function AppLayout() {
             )}
           </nav>
           <div className="hidden items-center gap-3 sm:flex">
-            <span className="text-sm text-neutral-500">{user?.fullName}</span>
+            <span className="text-sm text-neutral-300">{user?.fullName}</span>
             <button
               onClick={signOut}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-600 hover:bg-neutral-100"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-300 hover:bg-white/10 hover:text-white"
             >
               Sign out
             </button>

@@ -110,7 +110,7 @@ export function StaffPage() {
             <h1 className="text-lg font-semibold text-neutral-900">Managers</h1>
             <button
               onClick={() => setShowAddManager(true)}
-              className="flex items-center gap-1 rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+              className="flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700"
             >
               <Plus size={16} /> Add manager
             </button>
@@ -188,7 +188,7 @@ export function StaffPage() {
           <h1 className="text-lg font-semibold text-neutral-900">Staff</h1>
           <button
             onClick={() => setShowAddStaff(true)}
-            className="flex items-center gap-1 rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+            className="flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700"
           >
             <Plus size={16} /> Add staff
           </button>

@@ -29,9 +29,12 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-100 px-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-sm">
-        <h1 className="text-xl font-semibold text-neutral-900">Street Taste</h1>
+    <div className="flex min-h-screen items-center justify-center bg-ink-900 px-4">
+      <div className="w-full max-w-sm rounded-2xl border-t-4 border-gold-400 bg-white p-8 shadow-lg">
+        <div className="mb-1 flex items-center gap-2">
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-brand-600" aria-hidden="true" />
+          <h1 className="text-xl font-semibold text-neutral-900">Street Taste</h1>
+        </div>
         <p className="mt-1 text-sm text-neutral-500">Sign in to manage shifts</p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>
@@ -43,7 +46,7 @@ export function LoginPage() {
               id="email"
               type="email"
               autoComplete="email"
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none"
               {...register('email', { required: 'Email is required' })}
             />
             {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
@@ -57,7 +60,7 @@ export function LoginPage() {
               id="password"
               type="password"
               autoComplete="current-password"
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none"
               {...register('password', { required: 'Password is required' })}
             />
             {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>}
@@ -68,7 +71,7 @@ export function LoginPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-lg bg-neutral-900 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-50"
+            className="w-full rounded-lg bg-brand-600 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
           >
             {isSubmitting ? 'Signing in…' : 'Sign in'}
           </button>

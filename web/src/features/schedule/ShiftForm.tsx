@@ -133,7 +133,7 @@ export function ShiftForm({ defaultValues, onSubmit, onCancel, submitLabel }: Sh
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
+          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
         >
           {isSubmitting ? 'Saving…' : submitLabel}
         </button>

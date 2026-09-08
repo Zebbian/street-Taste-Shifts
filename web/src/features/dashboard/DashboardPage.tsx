@@ -22,7 +22,7 @@ export function DashboardPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setPeriodStart((p) => addPayPeriods(p, -1))}
-            className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-100"
+            className="rounded-lg p-1.5 text-neutral-500 hover:bg-brand-50 hover:text-brand-700"
             aria-label="Previous pay period"
           >
             <ChevronLeft size={18} />
@@ -32,7 +32,7 @@ export function DashboardPage() {
           </span>
           <button
             onClick={() => setPeriodStart((p) => addPayPeriods(p, 1))}
-            className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-100"
+            className="rounded-lg p-1.5 text-neutral-500 hover:bg-brand-50 hover:text-brand-700"
             aria-label="Next pay period"
           >
             <ChevronRight size={18} />
@@ -45,9 +45,9 @@ export function DashboardPage() {
           <p className="text-xs uppercase tracking-wide text-neutral-400">Total hours</p>
           <p className="mt-1 text-xl font-semibold text-neutral-900">{formatHours(totalHours)}</p>
         </div>
-        <div className="rounded-xl border border-neutral-200 bg-white p-4">
-          <p className="text-xs uppercase tracking-wide text-neutral-400">Total payroll</p>
-          <p className="mt-1 text-xl font-semibold text-neutral-900">{formatCents(totalCents)}</p>
+        <div className="rounded-xl border border-gold-400 bg-gold-50 p-4">
+          <p className="text-xs uppercase tracking-wide text-gold-600">Total payroll</p>
+          <p className="mt-1 text-xl font-semibold text-ink-900">{formatCents(totalCents)}</p>
         </div>
       </div>
 

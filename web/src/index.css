@@ -1,7 +1,26 @@
 @import "tailwindcss";
 
+@theme {
+  /* Mexican-inspired palette: green, gold/yellow, black, white. Kept to a
+     small set of steps so it stays simple to apply consistently. */
+  --color-brand-50: #f0faf1;
+  --color-brand-100: #dcf2df;
+  --color-brand-500: #16803c;
+  --color-brand-600: #106b31;
+  --color-brand-700: #0c5527;
+  --color-brand-900: #0a3a1c;
+
+  --color-gold-50: #fdf8e7;
+  --color-gold-100: #faedbd;
+  --color-gold-400: #f0c419;
+  --color-gold-500: #e0ab08;
+  --color-gold-600: #b8890a;
+
+  --color-ink-900: #17190f;
+}
+
 body {
   margin: 0;
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-  background: #f4f5f7;
+  background: #f7f8f4;
 }

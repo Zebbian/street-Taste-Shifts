@@ -88,7 +88,7 @@ export function SchedulePage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setWeek((w) => addWeeks(w, -1))}
-            className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-100"
+            className="rounded-lg p-1.5 text-neutral-500 hover:bg-brand-50 hover:text-brand-700"
             aria-label="Previous week"
           >
             <ChevronLeft size={18} />
@@ -96,7 +96,7 @@ export function SchedulePage() {
           <span className="w-36 text-center text-sm font-medium text-neutral-700">{formatWeekLabel(week)}</span>
           <button
             onClick={() => setWeek((w) => addWeeks(w, 1))}
-            className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-100"
+            className="rounded-lg p-1.5 text-neutral-500 hover:bg-brand-50 hover:text-brand-700"
             aria-label="Next week"
           >
             <ChevronRight size={18} />
@@ -111,16 +111,22 @@ export function SchedulePage() {
           {days.map((day) => {
             const key = toLocalDateKey(day)
             const dayShifts = shiftsByDay.get(key) ?? []
+            const isToday = key === toLocalDateKey(new Date())
             return (
-              <div key={key} className="rounded-xl border border-neutral-200 bg-white p-3">
+              <div
+                key={key}
+                className={`rounded-xl border bg-white p-3 ${
+                  isToday ? 'border-gold-400 ring-1 ring-gold-400' : 'border-neutral-200'
+                }`}
+              >
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-medium text-neutral-700">
+                  <span className={`text-sm font-medium ${isToday ? 'text-brand-700' : 'text-neutral-700'}`}>
                     {new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric' }).format(day)}
                   </span>
                   {isManager && (
                     <button
                       onClick={() => setModalDate(key)}
-                      className="rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
+                      className="rounded p-1 text-neutral-400 hover:bg-brand-50 hover:text-brand-700"
                       aria-label="Add shift"
                     >
                       <Plus size={16} />
@@ -130,11 +136,11 @@ export function SchedulePage() {
                 <div className="space-y-2">
                   {dayShifts.length === 0 && <p className="text-xs text-neutral-400">No shifts</p>}
                   {dayShifts.map((shift) => (
-                    <div key={shift.id} className="rounded-lg bg-neutral-50 p-2 text-xs">
+                    <div key={shift.id} className="rounded-lg border-l-2 border-brand-500 bg-brand-50 p-2 text-xs">
                       <p className="font-medium text-neutral-800">{shift.staff.fullName}</p>
                       <p className="text-neutral-500">{formatTimeRange(shift.startsAt, shift.endsAt)}</p>
                       <p className="text-neutral-500">{POSITION_LABELS[shift.position]}</p>
-                      <p className="mt-1 text-neutral-400">
+                      <p className="mt-1 text-neutral-500">
                         {formatHours(shiftHours(shift.startsAt, shift.endsAt))} ·{' '}
                         {formatRateCents(shift.hourlyRateCentsSnapshot)}
                       </p>
@@ -142,7 +148,7 @@ export function SchedulePage() {
                         <div className="mt-1 flex gap-2">
                           <button
                             onClick={() => setEditingShift(shift)}
-                            className="text-neutral-500 underline hover:text-neutral-800"
+                            className="text-brand-700 underline hover:text-brand-900"
                           >
                             Edit
                           </button>

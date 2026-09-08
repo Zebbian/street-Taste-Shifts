@@ -102,7 +102,7 @@ export function AcceptInvitePage() {
               id="password"
               type="password"
               autoComplete="new-password"
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none"
               {...register('password', { required: 'Password is required', minLength: { value: 8, message: 'At least 8 characters' } })}
             />
             {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>}
@@ -116,7 +116,7 @@ export function AcceptInvitePage() {
               id="confirmPassword"
               type="password"
               autoComplete="new-password"
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none"
               {...register('confirmPassword', { required: 'Please confirm your password' })}
             />
             {errors.confirmPassword && <p className="mt-1 text-xs text-red-600">{errors.confirmPassword.message}</p>}
@@ -130,7 +130,7 @@ export function AcceptInvitePage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-lg bg-neutral-900 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-50"
+            className="w-full rounded-lg bg-brand-600 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
           >
             {isSubmitting ? 'Saving…' : 'Set password & continue'}
           </button>
