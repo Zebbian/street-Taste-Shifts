@@ -13,8 +13,8 @@ shiftsRouter.use(requireAuth, loadCurrentUser)
 
 shiftsRouter.get('/', async (req, res, next) => {
   try {
-    const { week } = weekQuerySchema.parse(req.query)
-    const { start, end } = weekRangeUtc(week)
+    const { week, weekStart } = weekQuerySchema.parse(req.query)
+    const { start, end } = weekRangeUtc(week, weekStart)
 
     // Staff can only ever see their own shifts — never trust a client-supplied
     // staffId filter for this; scope is derived from the authenticated user.

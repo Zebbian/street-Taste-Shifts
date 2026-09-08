@@ -11,8 +11,8 @@ dashboardRouter.use(requireAuth, loadCurrentUser)
 
 dashboardRouter.get('/payroll', requireRole(Role.ADMIN, Role.MANAGER), async (req, res, next) => {
   try {
-    const { week } = weekQuerySchema.parse(req.query)
-    const { start, end } = weekRangeUtc(week)
+    const { week, weekStart } = weekQuerySchema.parse(req.query)
+    const { start, end } = weekRangeUtc(week, weekStart)
 
     const shifts = await prisma.shift.findMany({
       where: { startsAt: { gte: start, lt: end } },

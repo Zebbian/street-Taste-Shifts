@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthContext'
 import { useCreateShift, useDeleteShift, useShifts, useUpdateShift } from './useShifts'
 import { ShiftForm, type ShiftFormValues } from './ShiftForm'
 import { Modal } from '../../components/Modal'
-import { addWeeks, formatWeekLabel, startOfWeekIso, weekDays } from '../../lib/week'
+import { addWeeks, formatWeekLabel, startOfWeekIso, toLocalDateKey, weekDays } from '../../lib/week'
 import { formatHours, formatRateCents, formatTimeRange, shiftHours } from '../../lib/format'
 import { POSITION_LABELS } from '../../lib/positions'
 import type { Shift } from '../../types/api'
@@ -13,8 +13,11 @@ function toLocalDateTimeIso(date: string, time: string): string {
   return new Date(`${date}T${time}:00`).toISOString()
 }
 
+// The server returns UTC ISO timestamps — slicing the string would grab the
+// UTC calendar date, which can differ from the shift's local date. Parse and
+// re-derive the date in local time instead.
 function toDateInputValue(iso: string): string {
-  return iso.slice(0, 10)
+  return toLocalDateKey(new Date(iso))
 }
 
 function toTimeInputValue(iso: string): string {
@@ -104,7 +107,7 @@ export function SchedulePage() {
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-7">
           {days.map((day) => {
-            const key = day.toISOString().slice(0, 10)
+            const key = toLocalDateKey(day)
             const dayShifts = shiftsByDay.get(key) ?? []
             return (
               <div key={key} className="rounded-xl border border-neutral-200 bg-white p-3">

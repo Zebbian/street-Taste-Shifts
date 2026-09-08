@@ -52,4 +52,9 @@ export const updateShiftSchema = z
 
 export const weekQuerySchema = z.object({
   week: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'week must be YYYY-MM-DD'),
+  // The client's local start-of-week instant, as a UTC timestamp. Optional
+  // for backward compatibility; when present it's used instead of
+  // re-deriving the boundary from `week` in UTC, which can misfile shifts
+  // near midnight for any timezone other than UTC.
+  weekStart: z.string().datetime().optional(),
 })

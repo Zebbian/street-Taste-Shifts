@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../../lib/apiClient'
+import { weekStartInstant } from '../../lib/week'
 import type { Position, Shift } from '../../types/api'
 
 export interface CreateShiftInput {
@@ -15,7 +16,10 @@ export type UpdateShiftInput = Partial<CreateShiftInput>
 export function useShifts(week: string) {
   return useQuery({
     queryKey: ['shifts', week],
-    queryFn: () => apiClient.get<{ shifts: Shift[] }>(`/api/shifts?week=${week}`),
+    queryFn: () =>
+      apiClient.get<{ shifts: Shift[] }>(
+        `/api/shifts?week=${week}&weekStart=${encodeURIComponent(weekStartInstant(week))}`
+      ),
     select: (data) => data.shifts,
   })
 }
