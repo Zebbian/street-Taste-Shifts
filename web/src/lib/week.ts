@@ -39,3 +39,44 @@ export function formatWeekLabel(weekStartIso: string): string {
   const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' })
   return `${fmt.format(days[0]!)} – ${fmt.format(days[6]!)}`
 }
+
+// Fixed reference Monday all 14-day pay periods align to (must match the
+// backend's PAY_PERIOD_ANCHOR_UTC in api/src/lib/week.ts): Mon 2026-09-07 —
+// Sun 2026-09-20 is the first period, paid that Sunday.
+const PAY_PERIOD_ANCHOR = new Date(2026, 8, 7) // month is 0-indexed: 8 = September
+const PAY_PERIOD_DAYS = 14
+
+/** Snaps any local date to the start (a Monday) of the 14-day pay period containing it. */
+export function payPeriodStartIso(date: Date = new Date()): string {
+  const daysSinceAnchor = Math.floor((date.getTime() - PAY_PERIOD_ANCHOR.getTime()) / 86_400_000)
+  const periodsSinceAnchor = Math.floor(daysSinceAnchor / PAY_PERIOD_DAYS)
+  const start = new Date(PAY_PERIOD_ANCHOR)
+  start.setDate(start.getDate() + periodsSinceAnchor * PAY_PERIOD_DAYS)
+  return toLocalDateKey(start)
+}
+
+export function addPayPeriods(periodStartIso: string, delta: number): string {
+  const d = new Date(`${periodStartIso}T00:00:00`)
+  d.setDate(d.getDate() + delta * PAY_PERIOD_DAYS)
+  return toLocalDateKey(d)
+}
+
+export function payPeriodDays(periodStartIso: string): Date[] {
+  const start = new Date(`${periodStartIso}T00:00:00`)
+  return Array.from({ length: PAY_PERIOD_DAYS }, (_, i) => {
+    const d = new Date(start)
+    d.setDate(start.getDate() + i)
+    return d
+  })
+}
+
+export function formatPayPeriodLabel(periodStartIso: string): string {
+  const days = payPeriodDays(periodStartIso)
+  const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' })
+  return `${fmt.format(days[0]!)} – ${fmt.format(days[13]!)}`
+}
+
+/** The UTC instant for local midnight on the given pay-period-start date — send this to the API. */
+export function payPeriodStartInstant(periodStartIso: string): string {
+  return new Date(`${periodStartIso}T00:00:00`).toISOString()
+}

@@ -2,8 +2,8 @@ import { Router } from 'express'
 import { Role } from '@prisma/client'
 import { loadCurrentUser, requireAuth, requireRole } from '../middleware/auth.js'
 import { prisma } from '../lib/prisma.js'
-import { weekQuerySchema } from '../schemas.js'
-import { weekRangeUtc } from '../lib/week.js'
+import { payPeriodQuerySchema } from '../schemas.js'
+import { payPeriodRangeUtc } from '../lib/week.js'
 
 export const dashboardRouter = Router()
 
@@ -11,8 +11,8 @@ dashboardRouter.use(requireAuth, loadCurrentUser)
 
 dashboardRouter.get('/payroll', requireRole(Role.ADMIN, Role.MANAGER), async (req, res, next) => {
   try {
-    const { week, weekStart } = weekQuerySchema.parse(req.query)
-    const { start, end } = weekRangeUtc(week, weekStart)
+    const { periodDate, periodDateInstant } = payPeriodQuerySchema.parse(req.query)
+    const { start, end } = payPeriodRangeUtc(periodDate, periodDateInstant)
 
     const shifts = await prisma.shift.findMany({
       where: { startsAt: { gte: start, lt: end } },
@@ -46,7 +46,7 @@ dashboardRouter.get('/payroll', requireRole(Role.ADMIN, Role.MANAGER), async (re
       .map((e) => ({ ...e, totalHours: Math.round((e.totalMinutes / 60) * 100) / 100 }))
       .sort((a, b) => a.fullName.localeCompare(b.fullName))
 
-    res.json({ week, payroll })
+    res.json({ periodStart: start.toISOString(), periodEnd: end.toISOString(), payroll })
   } catch (err) {
     next(err)
   }

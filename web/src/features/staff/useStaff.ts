@@ -18,6 +18,7 @@ export interface UpdateStaffInput {
   fullName?: string
   position?: Position
   hourlyRateCents?: number | null
+  sundayRateCents?: number | null
   active?: boolean
   role?: 'MANAGER' | 'STAFF'
 }

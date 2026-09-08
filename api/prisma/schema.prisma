@@ -28,6 +28,10 @@ model User {
   role            Role     @default(STAFF)
   position        Position @default(WAITRESS)
   hourlyRateCents Int?
+  // Optional Sunday-premium rate. When set, any shift starting on a Sunday
+  // (in the timezone it was scheduled in) snapshots this rate instead of
+  // hourlyRateCents. Leave null to opt this staff member out.
+  sundayRateCents Int?
   active          Boolean  @default(true)
   createdAt       DateTime @default(now())
 

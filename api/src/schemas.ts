@@ -19,6 +19,7 @@ export const updateUserSchema = z
     fullName: z.string().min(1).max(120).optional(),
     position: positionSchema.optional(),
     hourlyRateCents: z.number().int().positive().max(1_000_000).nullable().optional(),
+    sundayRateCents: z.number().int().positive().max(1_000_000).nullable().optional(),
     active: z.boolean().optional(),
     // Admin-only field (enforced in the route, not here): promote/demote
     // between MANAGER and STAFF. ADMIN is intentionally never settable
@@ -27,11 +28,19 @@ export const updateUserSchema = z
   })
   .refine((data) => Object.keys(data).length > 0, { message: 'No fields to update' })
 
+// The shift's local calendar date (YYYY-MM-DD, no timezone ambiguity) —
+// used to decide whether the Sunday premium rate applies. Sent separately
+// from startsAt/endsAt (which are UTC instants) because deriving local
+// day-of-week from a UTC timestamp requires knowing the restaurant's
+// timezone, which the server doesn't track.
+const localDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'localDate must be YYYY-MM-DD')
+
 export const createShiftSchema = z
   .object({
     staffId: z.string().uuid(),
     startsAt: z.string().datetime(),
     endsAt: z.string().datetime(),
+    localDate: localDateSchema,
     position: positionSchema,
     notes: z.string().max(500).optional(),
   })
@@ -45,6 +54,7 @@ export const updateShiftSchema = z
     staffId: z.string().uuid().optional(),
     startsAt: z.string().datetime().optional(),
     endsAt: z.string().datetime().optional(),
+    localDate: localDateSchema.optional(),
     position: positionSchema.optional(),
     notes: z.string().max(500).nullable().optional(),
   })
@@ -57,4 +67,12 @@ export const weekQuerySchema = z.object({
   // re-deriving the boundary from `week` in UTC, which can misfile shifts
   // near midnight for any timezone other than UTC.
   weekStart: z.string().datetime().optional(),
+})
+
+export const payPeriodQuerySchema = z.object({
+  // The client's local reference date (YYYY-MM-DD) and the true UTC instant
+  // of that date's local midnight — both required together, or both
+  // omitted to get the period containing the server's current date.
+  periodDate: localDateSchema.optional(),
+  periodDateInstant: z.string().datetime().optional(),
 })

@@ -53,6 +53,7 @@ export function SchedulePage() {
       staffId: values.staffId,
       startsAt: toLocalDateTimeIso(values.date, values.startTime),
       endsAt: toLocalDateTimeIso(values.date, values.endTime),
+      localDate: values.date,
       position: values.position,
       notes: values.notes || undefined,
     })
@@ -67,6 +68,7 @@ export function SchedulePage() {
         staffId: values.staffId,
         startsAt: toLocalDateTimeIso(values.date, values.startTime),
         endsAt: toLocalDateTimeIso(values.date, values.endTime),
+        localDate: values.date,
         position: values.position,
         notes: values.notes || undefined,
       },

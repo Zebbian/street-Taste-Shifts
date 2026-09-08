@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { usePayroll } from './usePayroll'
-import { addWeeks, formatWeekLabel, startOfWeekIso } from '../../lib/week'
+import { addPayPeriods, formatPayPeriodLabel, payPeriodStartIso } from '../../lib/week'
 import { formatCents, formatHours } from '../../lib/format'
 import { POSITION_LABELS } from '../../lib/positions'
 
 export function DashboardPage() {
-  const [week, setWeek] = useState(() => startOfWeekIso())
-  const { data, isLoading } = usePayroll(week)
+  const [periodStart, setPeriodStart] = useState(() => payPeriodStartIso())
+  const { data, isLoading } = usePayroll(periodStart)
 
   const totalCents = data?.payroll.reduce((sum, p) => sum + p.totalCents, 0) ?? 0
   const totalHours = data?.payroll.reduce((sum, p) => sum + p.totalHours, 0) ?? 0
@@ -15,20 +15,25 @@ export function DashboardPage() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-neutral-900">Payroll dashboard</h1>
+        <div>
+          <h1 className="text-lg font-semibold text-neutral-900">Payroll dashboard</h1>
+          <p className="text-xs text-neutral-400">14-day pay period, paid the closing Sunday</p>
+        </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setWeek((w) => addWeeks(w, -1))}
+            onClick={() => setPeriodStart((p) => addPayPeriods(p, -1))}
             className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-100"
-            aria-label="Previous week"
+            aria-label="Previous pay period"
           >
             <ChevronLeft size={18} />
           </button>
-          <span className="w-36 text-center text-sm font-medium text-neutral-700">{formatWeekLabel(week)}</span>
+          <span className="w-44 text-center text-sm font-medium text-neutral-700">
+            {formatPayPeriodLabel(periodStart)}
+          </span>
           <button
-            onClick={() => setWeek((w) => addWeeks(w, 1))}
+            onClick={() => setPeriodStart((p) => addPayPeriods(p, 1))}
             className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-100"
-            aria-label="Next week"
+            aria-label="Next pay period"
           >
             <ChevronRight size={18} />
           </button>
@@ -73,7 +78,7 @@ export function DashboardPage() {
               {(data?.payroll.length ?? 0) === 0 && (
                 <tr>
                   <td colSpan={5} className="px-4 py-6 text-center text-neutral-400">
-                    No shifts scheduled this week yet.
+                    No shifts scheduled this pay period yet.
                   </td>
                 </tr>
               )}

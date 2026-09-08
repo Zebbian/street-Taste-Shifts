@@ -1,14 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '../../lib/apiClient'
-import { weekStartInstant } from '../../lib/week'
-import type { PayrollEntry } from '../../types/api'
+import { payPeriodStartInstant } from '../../lib/week'
+import type { PayrollResponse } from '../../types/api'
 
-export function usePayroll(week: string) {
+export function usePayroll(periodStart: string) {
   return useQuery({
-    queryKey: ['payroll', week],
+    queryKey: ['payroll', periodStart],
     queryFn: () =>
-      apiClient.get<{ week: string; payroll: PayrollEntry[] }>(
-        `/api/dashboard/payroll?week=${week}&weekStart=${encodeURIComponent(weekStartInstant(week))}`
+      apiClient.get<PayrollResponse>(
+        `/api/dashboard/payroll?periodDate=${periodStart}&periodDateInstant=${encodeURIComponent(payPeriodStartInstant(periodStart))}`
       ),
   })
 }

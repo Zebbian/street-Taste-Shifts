@@ -9,6 +9,7 @@ export interface User {
   role: Role
   position: Position
   hourlyRateCents: number | null
+  sundayRateCents: number | null
   active: boolean
   createdAt: string
 }
@@ -41,6 +42,12 @@ export interface PayrollEntry {
   totalCents: number
   shiftCount: number
   totalHours: number
+}
+
+export interface PayrollResponse {
+  periodStart: string
+  periodEnd: string
+  payroll: PayrollEntry[]
 }
 
 export interface ApiErrorBody {

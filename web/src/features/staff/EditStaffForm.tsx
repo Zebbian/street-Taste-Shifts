@@ -5,6 +5,7 @@ import type { Position, User } from '../../types/api'
 export interface EditStaffFormValues {
   position: Position
   hourlyRate: string
+  sundayRate: string
 }
 
 export function EditStaffForm({
@@ -24,6 +25,7 @@ export function EditStaffForm({
     defaultValues: {
       position: member.position,
       hourlyRate: member.hourlyRateCents != null ? (member.hourlyRateCents / 100).toFixed(2) : '',
+      sundayRate: member.sundayRateCents != null ? (member.sundayRateCents / 100).toFixed(2) : '',
     },
   })
 
@@ -56,6 +58,22 @@ export function EditStaffForm({
         <p className="mt-1 text-xs text-neutral-400">
           New shifts assigned to {member.fullName} will use this rate. Past shifts keep the rate they were
           created with.
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-neutral-700">Sunday rate ($, optional)</label>
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder="Same as hourly rate"
+          className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+          {...register('sundayRate')}
+        />
+        <p className="mt-1 text-xs text-neutral-400">
+          If set, any Sunday shift assigned to {member.fullName} uses this rate instead. Leave blank to use
+          their normal hourly rate on Sundays too.
         </p>
       </div>
 

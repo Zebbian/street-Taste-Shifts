@@ -4,8 +4,17 @@ import { loadCurrentUser, requireAuth, requireRole } from '../middleware/auth.js
 import { prisma } from '../lib/prisma.js'
 import { AppError } from '../lib/AppError.js'
 import { createShiftSchema, updateShiftSchema, weekQuerySchema } from '../schemas.js'
-import { weekRangeUtc } from '../lib/week.js'
+import { isSundayDate, weekRangeUtc } from '../lib/week.js'
 import { requireParam } from '../lib/params.js'
+import type { User } from '@prisma/client'
+
+/** Picks the Sunday premium rate when the shift falls on a Sunday and the staff member has one set, otherwise their normal rate. */
+function rateForShift(staff: User, localDate: string): number | null {
+  if (isSundayDate(localDate) && staff.sundayRateCents != null) {
+    return staff.sundayRateCents
+  }
+  return staff.hourlyRateCents
+}
 
 export const shiftsRouter = Router()
 
@@ -43,6 +52,9 @@ shiftsRouter.post('/', requireRole(Role.ADMIN, Role.MANAGER), async (req, res, n
       throw AppError.badRequest('Staff member has no hourly rate set')
     }
 
+    const rate = rateForShift(staff, body.localDate)
+    if (rate == null) throw AppError.badRequest('Staff member has no hourly rate set')
+
     const shift = await prisma.shift.create({
       data: {
         staffId: body.staffId,
@@ -50,7 +62,7 @@ shiftsRouter.post('/', requireRole(Role.ADMIN, Role.MANAGER), async (req, res, n
         endsAt: new Date(body.endsAt),
         position: body.position,
         notes: body.notes,
-        hourlyRateCentsSnapshot: staff.hourlyRateCents,
+        hourlyRateCentsSnapshot: rate,
         createdById: req.currentUser!.id,
       },
       include: { staff: { select: { id: true, fullName: true, position: true } } },
@@ -69,19 +81,30 @@ shiftsRouter.patch('/:id', requireRole(Role.ADMIN, Role.MANAGER), async (req, re
     const existing = await prisma.shift.findUnique({ where: { id: shiftId } })
     if (!existing) throw AppError.notFound('Shift not found')
 
-    // Re-snapshot the rate if the assigned staff member changes.
-    let hourlyRateCentsSnapshot: number | undefined
-    if (body.staffId && body.staffId !== existing.staffId) {
-      const staff = await prisma.user.findUnique({ where: { id: body.staffId } })
-      if (!staff || !staff.active) throw AppError.badRequest('Staff member not found or inactive')
-      if (staff.hourlyRateCents == null) throw AppError.badRequest('Staff member has no hourly rate set')
-      hourlyRateCentsSnapshot = staff.hourlyRateCents
+    // Re-snapshot the rate whenever the assigned staff member or the shift's
+    // date changes — either can affect whether the Sunday premium applies.
+    // The frontend's edit form always submits both staffId and localDate
+    // together, so require localDate here too rather than guessing the
+    // shift's existing date (which isn't stored — only the UTC instant is).
+    if (body.staffId && !body.localDate) {
+      throw AppError.badRequest('localDate is required when changing staffId')
     }
+
+    let hourlyRateCentsSnapshot: number | undefined
+    if (body.localDate) {
+      const staff = await prisma.user.findUnique({ where: { id: body.staffId ?? existing.staffId } })
+      if (!staff || !staff.active) throw AppError.badRequest('Staff member not found or inactive')
+      const rate = rateForShift(staff, body.localDate)
+      if (rate == null) throw AppError.badRequest('Staff member has no hourly rate set')
+      hourlyRateCentsSnapshot = rate
+    }
+
+    const { localDate: _localDate, ...updateFields } = body
 
     const shift = await prisma.shift.update({
       where: { id: shiftId },
       data: {
-        ...body,
+        ...updateFields,
         startsAt: body.startsAt ? new Date(body.startsAt) : undefined,
         endsAt: body.endsAt ? new Date(body.endsAt) : undefined,
         hourlyRateCentsSnapshot,

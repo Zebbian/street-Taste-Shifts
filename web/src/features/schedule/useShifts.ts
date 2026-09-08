@@ -7,6 +7,7 @@ export interface CreateShiftInput {
   staffId: string
   startsAt: string
   endsAt: string
+  localDate: string
   position: Position
   notes?: string
 }

@@ -67,10 +67,21 @@ export function StaffPage() {
       setFormError('Enter a valid hourly rate.')
       return
     }
+
+    let sundayRateCents: number | null = null
+    if (values.sundayRate.trim() !== '') {
+      const sundayDollars = Number(values.sundayRate)
+      if (!Number.isFinite(sundayDollars) || sundayDollars <= 0) {
+        setFormError('Enter a valid Sunday rate, or leave it blank.')
+        return
+      }
+      sundayRateCents = Math.round(sundayDollars * 100)
+    }
+
     try {
       await updateStaff.mutateAsync({
         id: editingMember.id,
-        input: { position: values.position, hourlyRateCents: Math.round(dollars * 100) },
+        input: { position: values.position, hourlyRateCents: Math.round(dollars * 100), sundayRateCents },
       })
       setEditingMember(null)
     } catch (err) {
@@ -165,12 +176,13 @@ export function StaffPage() {
           <p className="text-sm text-neutral-500">Loading staff…</p>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
-            <table className="w-full min-w-[560px] text-sm">
+            <table className="w-full min-w-[680px] text-sm">
               <thead className="bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
                 <tr>
                   <th className="px-4 py-2">Name</th>
                   <th className="px-4 py-2">Position</th>
                   <th className="px-4 py-2">Rate</th>
+                  <th className="px-4 py-2">Sunday rate</th>
                   <th className="px-4 py-2">Status</th>
                   <th className="px-4 py-2" />
                 </tr>
@@ -182,6 +194,9 @@ export function StaffPage() {
                     <td className="px-4 py-2 text-neutral-600">{POSITION_LABELS[member.position]}</td>
                     <td className="px-4 py-2 text-neutral-600">
                       {member.hourlyRateCents != null ? formatRateCents(member.hourlyRateCents) : '—'}
+                    </td>
+                    <td className="px-4 py-2 text-neutral-600">
+                      {member.sundayRateCents != null ? formatRateCents(member.sundayRateCents) : '—'}
                     </td>
                     <td className="px-4 py-2">
                       <span
@@ -220,7 +235,7 @@ export function StaffPage() {
                 ))}
                 {staffMembers.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-4 py-6 text-center text-neutral-400">
+                    <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
                       No staff yet — add your first team member.
                     </td>
                   </tr>
