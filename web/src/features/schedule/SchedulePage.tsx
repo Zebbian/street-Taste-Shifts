@@ -161,6 +161,7 @@ export function SchedulePage() {
       {modalDate && (
         <Modal title="Assign shift" onClose={() => setModalDate(null)}>
           <ShiftForm
+            key={modalDate}
             defaultValues={{ date: modalDate, startTime: '09:00', endTime: '17:00' }}
             onSubmit={handleCreate}
             onCancel={() => setModalDate(null)}
@@ -172,6 +173,7 @@ export function SchedulePage() {
       {editingShift && (
         <Modal title="Edit shift" onClose={() => setEditingShift(null)}>
           <ShiftForm
+            key={editingShift.id}
             defaultValues={{
               staffId: editingShift.staffId,
               date: toDateInputValue(editingShift.startsAt),
