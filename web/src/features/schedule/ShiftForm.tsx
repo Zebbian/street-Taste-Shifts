@@ -22,7 +22,9 @@ interface ShiftFormProps {
 
 export function ShiftForm({ defaultValues, onSubmit, onCancel, submitLabel }: ShiftFormProps) {
   const { data: staff } = useStaffList()
-  const activeStaff = staff?.filter((s) => s.role === 'STAFF' && s.active) ?? []
+  // Managers/admins are part of the team too and can be scheduled for
+  // shifts — just like staff, they need an hourly rate set to be assignable.
+  const assignableStaff = staff?.filter((s) => s.active && s.hourlyRateCents != null) ?? []
 
   const {
     register,
@@ -35,8 +37,10 @@ export function ShiftForm({ defaultValues, onSubmit, onCancel, submitLabel }: Sh
   const selectedStaffId = watch('staffId')
 
   useEffect(() => {
-    const selected = activeStaff.find((s) => s.id === selectedStaffId)
-    if (selected && !defaultValues?.position) {
+    const selected = assignableStaff.find((s) => s.id === selectedStaffId)
+    // A manager's own "position" is MANAGER, which isn't a valid position
+    // worked for a shift — only auto-fill for an actual staff position.
+    if (selected && selected.position !== 'MANAGER' && !defaultValues?.position) {
       setValue('position', selected.position)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -51,15 +55,15 @@ export function ShiftForm({ defaultValues, onSubmit, onCancel, submitLabel }: Sh
           {...register('staffId', { required: 'Select a staff member' })}
         >
           <option value="">Select…</option>
-          {activeStaff.map((s) => (
+          {assignableStaff.map((s) => (
             <option key={s.id} value={s.id}>
               {s.fullName} ({POSITION_LABELS[s.position]})
             </option>
           ))}
         </select>
         {errors.staffId && <p className="mt-1 text-xs text-red-600">{errors.staffId.message}</p>}
-        {activeStaff.length === 0 && (
-          <p className="mt-1 text-xs text-neutral-500">No active staff with a pay rate set yet.</p>
+        {assignableStaff.length === 0 && (
+          <p className="mt-1 text-xs text-neutral-500">No active team members with a pay rate set yet.</p>
         )}
       </div>
 

@@ -29,21 +29,25 @@ export function EditStaffForm({
     },
   })
 
+  const isManager = member.role === 'MANAGER' || member.role === 'ADMIN'
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-      <div>
-        <label className="block text-sm font-medium text-neutral-700">Position</label>
-        <select
-          className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-          {...register('position', { required: true })}
-        >
-          {STAFF_POSITIONS.map((p) => (
-            <option key={p} value={p}>
-              {POSITION_LABELS[p]}
-            </option>
-          ))}
-        </select>
-      </div>
+      {!isManager && (
+        <div>
+          <label className="block text-sm font-medium text-neutral-700">Position</label>
+          <select
+            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+            {...register('position', { required: true })}
+          >
+            {STAFF_POSITIONS.map((p) => (
+              <option key={p} value={p}>
+                {POSITION_LABELS[p]}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div>
         <label className="block text-sm font-medium text-neutral-700">Hourly rate ($)</label>

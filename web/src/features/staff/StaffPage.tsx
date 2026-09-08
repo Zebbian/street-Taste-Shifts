@@ -78,10 +78,16 @@ export function StaffPage() {
       sundayRateCents = Math.round(sundayDollars * 100)
     }
 
+    const isManager = editingMember.role === 'MANAGER' || editingMember.role === 'ADMIN'
+
     try {
       await updateStaff.mutateAsync({
         id: editingMember.id,
-        input: { position: values.position, hourlyRateCents: Math.round(dollars * 100), sundayRateCents },
+        input: {
+          ...(isManager ? {} : { position: values.position }),
+          hourlyRateCents: Math.round(dollars * 100),
+          sundayRateCents,
+        },
       })
       setEditingMember(null)
     } catch (err) {
@@ -114,11 +120,13 @@ export function StaffPage() {
             <p className="text-sm text-neutral-500">Loading managers…</p>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
-              <table className="w-full min-w-[420px] text-sm">
+              <table className="w-full min-w-[600px] text-sm">
                 <thead className="bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
                   <tr>
                     <th className="px-4 py-2">Name</th>
                     <th className="px-4 py-2">Email</th>
+                    <th className="px-4 py-2">Rate</th>
+                    <th className="px-4 py-2">Sunday rate</th>
                     <th className="px-4 py-2">Status</th>
                     <th className="px-4 py-2" />
                   </tr>
@@ -128,6 +136,12 @@ export function StaffPage() {
                     <tr key={manager.id} className="border-t border-neutral-100">
                       <td className="px-4 py-2 font-medium text-neutral-800">{manager.fullName}</td>
                       <td className="px-4 py-2 text-neutral-600">{manager.email}</td>
+                      <td className="px-4 py-2 text-neutral-600">
+                        {manager.hourlyRateCents != null ? formatRateCents(manager.hourlyRateCents) : '—'}
+                      </td>
+                      <td className="px-4 py-2 text-neutral-600">
+                        {manager.sundayRateCents != null ? formatRateCents(manager.sundayRateCents) : '—'}
+                      </td>
                       <td className="px-4 py-2">
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs ${
@@ -138,18 +152,26 @@ export function StaffPage() {
                         </span>
                       </td>
                       <td className="px-4 py-2 text-right">
-                        <button
-                          onClick={() => toggleManagerRole(manager.id, 'MANAGER')}
-                          className="text-xs text-neutral-500 underline hover:text-neutral-800"
-                        >
-                          Demote to staff
-                        </button>
+                        <div className="flex justify-end gap-3">
+                          <button
+                            onClick={() => setEditingMember(manager)}
+                            className="text-xs text-neutral-500 underline hover:text-neutral-800"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => toggleManagerRole(manager.id, 'MANAGER')}
+                            className="text-xs text-neutral-500 underline hover:text-neutral-800"
+                          >
+                            Demote to staff
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
                   {managers.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-4 py-6 text-center text-neutral-400">
+                      <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
                         No other managers yet.
                       </td>
                     </tr>
