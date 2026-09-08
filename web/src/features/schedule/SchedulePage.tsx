@@ -24,7 +24,7 @@ function toTimeInputValue(iso: string): string {
 
 export function SchedulePage() {
   const { user } = useAuth()
-  const isManager = user?.role === 'MANAGER'
+  const isManager = user?.role === 'MANAGER' || user?.role === 'ADMIN'
   const [week, setWeek] = useState(() => startOfWeekIso())
   const { data: shifts, isLoading } = useShifts(week)
   const createShift = useCreateShift()
