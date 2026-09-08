@@ -86,7 +86,30 @@ npm run dev        # http://localhost:5173
 
 ## Deployment
 
-Designed for **web/** on Vercel or Netlify, and **api/** + Postgres on Railway or Render. Set the same
-environment variables from each `.env.example` in your hosting provider's dashboard, run
-`npx prisma migrate deploy` against production `DATABASE_URL` as part of your deploy step, and set
-`CORS_ORIGIN` (api) to the deployed frontend's URL.
+Designed for **web/** on Vercel or Netlify, and **api/** on Render or Railway (Postgres stays on
+Supabase either way — no separate database host needed).
+
+### API on Render (free tier)
+
+1. [render.com](https://render.com) → **New +** → **Web Service** → connect this GitHub repo.
+2. Root directory: `api`
+3. Build command: `npm install && npx prisma generate && npm run build`
+4. Start command: `npx prisma migrate deploy && npm start`
+5. Environment variables (Render dashboard → Environment): `SUPABASE_URL`, `SUPABASE_SECRET_KEY`,
+   `SUPABASE_JWKS_URL`, `DATABASE_URL` — same values as local `api/.env` — plus `CORS_ORIGIN` (set to
+   the deployed frontend's URL once you have it) and `NODE_ENV=production`.
+
+Render's free tier spins the service down after ~15 minutes of inactivity; the first request after
+that takes 30–60s to wake it back up. Fine for light/internal use, not for a high-traffic public app.
+
+### Web app on Vercel
+
+1. [vercel.com](https://vercel.com) → **Add New** → **Project** → import this repo.
+2. Root directory: `web`
+3. Framework preset: Vite (auto-detected). Build command/output directory default to `npm run build` /
+   `dist` — no changes needed.
+4. Environment variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (publishable key only),
+   and `VITE_API_URL` set to the deployed API's URL (e.g. the Render service URL from above).
+
+After both are live, go back to the API's `CORS_ORIGIN` env var and set it to the real Vercel URL, then
+redeploy the API so it accepts requests from the deployed frontend.
