@@ -1,6 +1,6 @@
 export type Role = 'ADMIN' | 'MANAGER' | 'STAFF'
 
-export type Position = 'SERVER' | 'BARTENDER' | 'LINE_COOK' | 'HOST' | 'DISHWASHER' | 'MANAGER'
+export type Position = 'HOST' | 'WAITRESS' | 'BARTENDER' | 'RUNNER' | 'MANAGER'
 
 export interface User {
   id: string

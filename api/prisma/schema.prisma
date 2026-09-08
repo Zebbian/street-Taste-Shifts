@@ -14,11 +14,10 @@ enum Role {
 }
 
 enum Position {
-  SERVER
-  BARTENDER
-  LINE_COOK
   HOST
-  DISHWASHER
+  WAITRESS
+  BARTENDER
+  RUNNER
   MANAGER
 }
 
@@ -27,7 +26,7 @@ model User {
   email           String   @unique
   fullName        String
   role            Role     @default(STAFF)
-  position        Position @default(SERVER)
+  position        Position @default(WAITRESS)
   hourlyRateCents Int?
   active          Boolean  @default(true)
   createdAt       DateTime @default(now())

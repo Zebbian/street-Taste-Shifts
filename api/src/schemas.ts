@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const positionSchema = z.enum(['SERVER', 'BARTENDER', 'LINE_COOK', 'HOST', 'DISHWASHER', 'MANAGER'])
+export const positionSchema = z.enum(['HOST', 'WAITRESS', 'BARTENDER', 'RUNNER', 'MANAGER'])
 
 export const registerStaffSchema = z.object({
   email: z.string().email(),

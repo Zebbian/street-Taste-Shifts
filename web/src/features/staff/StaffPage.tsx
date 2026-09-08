@@ -4,10 +4,12 @@ import { useAuth } from '../auth/AuthContext'
 import { useRegisterManager, useRegisterStaff, useStaffList, useUpdateStaff } from './useStaff'
 import { StaffForm, type StaffFormValues } from './StaffForm'
 import { ManagerForm, type ManagerFormValues } from './ManagerForm'
+import { EditStaffForm, type EditStaffFormValues } from './EditStaffForm'
 import { Modal } from '../../components/Modal'
 import { POSITION_LABELS } from '../../lib/positions'
 import { formatRateCents } from '../../lib/format'
 import { ApiError } from '../../lib/apiClient'
+import type { User } from '../../types/api'
 
 export function StaffPage() {
   const { user } = useAuth()
@@ -20,6 +22,7 @@ export function StaffPage() {
 
   const [showAddStaff, setShowAddStaff] = useState(false)
   const [showAddManager, setShowAddManager] = useState(false)
+  const [editingMember, setEditingMember] = useState<User | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
 
   async function handleAddStaff(values: StaffFormValues) {
@@ -54,6 +57,25 @@ export function StaffPage() {
 
   async function toggleActive(id: string, active: boolean) {
     await updateStaff.mutateAsync({ id, input: { active: !active } })
+  }
+
+  async function handleEditStaff(values: EditStaffFormValues) {
+    if (!editingMember) return
+    setFormError(null)
+    const dollars = Number(values.hourlyRate)
+    if (!Number.isFinite(dollars) || dollars <= 0) {
+      setFormError('Enter a valid hourly rate.')
+      return
+    }
+    try {
+      await updateStaff.mutateAsync({
+        id: editingMember.id,
+        input: { position: values.position, hourlyRateCents: Math.round(dollars * 100) },
+      })
+      setEditingMember(null)
+    } catch (err) {
+      setFormError(err instanceof ApiError ? err.message : 'Failed to update staff member.')
+    }
   }
 
   async function toggleManagerRole(id: string, currentRole: 'MANAGER' | 'STAFF') {
@@ -172,6 +194,12 @@ export function StaffPage() {
                     </td>
                     <td className="px-4 py-2 text-right">
                       <div className="flex justify-end gap-3">
+                        <button
+                          onClick={() => setEditingMember(member)}
+                          className="text-xs text-neutral-500 underline hover:text-neutral-800"
+                        >
+                          Edit
+                        </button>
                         {isAdmin && (
                           <button
                             onClick={() => toggleManagerRole(member.id, 'STAFF')}
@@ -214,6 +242,13 @@ export function StaffPage() {
         <Modal title="Add manager" onClose={() => setShowAddManager(false)}>
           {formError && <p className="mb-3 text-sm text-red-600">{formError}</p>}
           <ManagerForm onSubmit={handleAddManager} onCancel={() => setShowAddManager(false)} />
+        </Modal>
+      )}
+
+      {editingMember && (
+        <Modal title={`Edit ${editingMember.fullName}`} onClose={() => setEditingMember(null)}>
+          {formError && <p className="mb-3 text-sm text-red-600">{formError}</p>}
+          <EditStaffForm member={editingMember} onSubmit={handleEditStaff} onCancel={() => setEditingMember(null)} />
         </Modal>
       )}
     </div>
