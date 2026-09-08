@@ -9,7 +9,7 @@ export const dashboardRouter = Router()
 
 dashboardRouter.use(requireAuth, loadCurrentUser)
 
-dashboardRouter.get('/payroll', requireRole(Role.MANAGER), async (req, res, next) => {
+dashboardRouter.get('/payroll', requireRole(Role.ADMIN, Role.MANAGER), async (req, res, next) => {
   try {
     const { week } = weekQuerySchema.parse(req.query)
     const { start, end } = weekRangeUtc(week)

@@ -18,7 +18,8 @@ shiftsRouter.get('/', async (req, res, next) => {
 
     // Staff can only ever see their own shifts — never trust a client-supplied
     // staffId filter for this; scope is derived from the authenticated user.
-    const staffFilter = req.currentUser!.role === Role.MANAGER ? {} : { staffId: req.currentUser!.id }
+    const isManagerOrAdmin = req.currentUser!.role === Role.MANAGER || req.currentUser!.role === Role.ADMIN
+    const staffFilter = isManagerOrAdmin ? {} : { staffId: req.currentUser!.id }
 
     const shifts = await prisma.shift.findMany({
       where: { ...staffFilter, startsAt: { gte: start, lt: end } },
@@ -32,7 +33,7 @@ shiftsRouter.get('/', async (req, res, next) => {
   }
 })
 
-shiftsRouter.post('/', requireRole(Role.MANAGER), async (req, res, next) => {
+shiftsRouter.post('/', requireRole(Role.ADMIN, Role.MANAGER), async (req, res, next) => {
   try {
     const body = createShiftSchema.parse(req.body)
 
@@ -61,7 +62,7 @@ shiftsRouter.post('/', requireRole(Role.MANAGER), async (req, res, next) => {
   }
 })
 
-shiftsRouter.patch('/:id', requireRole(Role.MANAGER), async (req, res, next) => {
+shiftsRouter.patch('/:id', requireRole(Role.ADMIN, Role.MANAGER), async (req, res, next) => {
   try {
     const body = updateShiftSchema.parse(req.body)
     const shiftId = requireParam(req, 'id')
@@ -94,7 +95,7 @@ shiftsRouter.patch('/:id', requireRole(Role.MANAGER), async (req, res, next) => 
   }
 })
 
-shiftsRouter.delete('/:id', requireRole(Role.MANAGER), async (req, res, next) => {
+shiftsRouter.delete('/:id', requireRole(Role.ADMIN, Role.MANAGER), async (req, res, next) => {
   try {
     const shiftId = requireParam(req, 'id')
     const existing = await prisma.shift.findUnique({ where: { id: shiftId } })

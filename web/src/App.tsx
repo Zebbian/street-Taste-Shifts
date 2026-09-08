@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './features/auth/AuthContext'
 import { LoginPage } from './features/auth/LoginPage'
+import { AcceptInvitePage } from './features/auth/AcceptInvitePage'
 import { AppLayout } from './components/AppLayout'
 import { RequireAuth } from './components/RequireAuth'
 import { SchedulePage } from './features/schedule/SchedulePage'
@@ -19,12 +20,13 @@ export function App() {
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/accept-invite" element={<AcceptInvitePage />} />
 
             <Route element={<RequireAuth />}>
               <Route element={<AppLayout />}>
                 <Route path="/schedule" element={<SchedulePage />} />
 
-                <Route element={<RequireAuth role="MANAGER" />}>
+                <Route element={<RequireAuth roles={['ADMIN', 'MANAGER']} />}>
                   <Route path="/staff" element={<StaffPage />} />
                   <Route path="/dashboard" element={<DashboardPage />} />
                 </Route>

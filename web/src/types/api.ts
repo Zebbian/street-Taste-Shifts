@@ -1,4 +1,4 @@
-export type Role = 'MANAGER' | 'STAFF'
+export type Role = 'ADMIN' | 'MANAGER' | 'STAFF'
 
 export type Position = 'SERVER' | 'BARTENDER' | 'LINE_COOK' | 'HOST' | 'DISHWASHER' | 'MANAGER'
 

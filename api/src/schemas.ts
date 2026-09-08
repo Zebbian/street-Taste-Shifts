@@ -9,12 +9,21 @@ export const registerStaffSchema = z.object({
   hourlyRateCents: z.number().int().positive().max(1_000_000),
 })
 
+export const registerManagerSchema = z.object({
+  email: z.string().email(),
+  fullName: z.string().min(1).max(120),
+})
+
 export const updateUserSchema = z
   .object({
     fullName: z.string().min(1).max(120).optional(),
     position: positionSchema.optional(),
     hourlyRateCents: z.number().int().positive().max(1_000_000).nullable().optional(),
     active: z.boolean().optional(),
+    // Admin-only field (enforced in the route, not here): promote/demote
+    // between MANAGER and STAFF. ADMIN is intentionally never settable
+    // through this endpoint.
+    role: z.enum(['MANAGER', 'STAFF']).optional(),
   })
   .refine((data) => Object.keys(data).length > 0, { message: 'No fields to update' })
 

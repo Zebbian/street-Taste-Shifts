@@ -9,11 +9,17 @@ export interface RegisterStaffInput {
   hourlyRateCents: number
 }
 
+export interface RegisterManagerInput {
+  email: string
+  fullName: string
+}
+
 export interface UpdateStaffInput {
   fullName?: string
   position?: Position
   hourlyRateCents?: number | null
   active?: boolean
+  role?: 'MANAGER' | 'STAFF'
 }
 
 export function useStaffList() {
@@ -28,6 +34,14 @@ export function useRegisterStaff() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (input: RegisterStaffInput) => apiClient.post<{ user: User }>('/api/users/register-staff', input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
+  })
+}
+
+export function useRegisterManager() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: RegisterManagerInput) => apiClient.post<{ user: User }>('/api/users/register-manager', input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
   })
 }

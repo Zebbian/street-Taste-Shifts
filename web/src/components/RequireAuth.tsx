@@ -2,7 +2,7 @@ import { Navigate, Outlet } from 'react-router'
 import { useAuth } from '../features/auth/AuthContext'
 import type { Role } from '../types/api'
 
-export function RequireAuth({ role }: { role?: Role }) {
+export function RequireAuth({ roles }: { roles?: Role[] }) {
   const { session, user, loading } = useAuth()
 
   if (loading) {
@@ -15,7 +15,7 @@ export function RequireAuth({ role }: { role?: Role }) {
     return <Navigate to="/login" replace />
   }
 
-  if (role && user.role !== role) {
+  if (roles && !roles.includes(user.role)) {
     return <Navigate to="/schedule" replace />
   }
 
