@@ -51,6 +51,19 @@ export interface PayrollResponse {
   payroll: PayrollEntry[]
 }
 
+export interface ShiftTotals {
+  totalMinutes: number
+  totalCents: number
+  totalHours: number
+  shiftCount: number
+}
+
+export interface MyEarningsResponse {
+  today: ShiftTotals
+  thisWeek: ShiftTotals
+  thisMonth: ShiftTotals
+}
+
 export interface ApiErrorBody {
   error: { code: string; message: string }
 }

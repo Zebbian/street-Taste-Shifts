@@ -80,3 +80,19 @@ export function formatPayPeriodLabel(periodStartIso: string): string {
 export function payPeriodStartInstant(periodStartIso: string): string {
   return new Date(`${periodStartIso}T00:00:00`).toISOString()
 }
+
+/** The UTC instant for local midnight today. */
+export function todayStartInstant(): string {
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
+}
+
+export function startOfMonthIso(date: Date = new Date()): string {
+  return toLocalDateKey(new Date(date.getFullYear(), date.getMonth(), 1))
+}
+
+/** The UTC instant for local midnight on the 1st of the given month (YYYY-MM-DD, any day in that month). */
+export function monthStartInstant(monthDateIso: string): string {
+  const [y, m] = monthDateIso.split('-').map(Number)
+  return new Date(y!, m! - 1, 1).toISOString()
+}

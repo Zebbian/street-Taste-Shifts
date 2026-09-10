@@ -29,6 +29,9 @@ export function AppLayout() {
             <NavLink to="/schedule" className={linkClass}>
               Schedule
             </NavLink>
+            <NavLink to="/my-earnings" className={linkClass}>
+              My earnings
+            </NavLink>
             {(user?.role === 'MANAGER' || user?.role === 'ADMIN') && (
               <>
                 <NavLink to="/staff" className={linkClass}>

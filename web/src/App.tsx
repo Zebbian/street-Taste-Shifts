@@ -8,6 +8,7 @@ import { RequireAuth } from './components/RequireAuth'
 import { SchedulePage } from './features/schedule/SchedulePage'
 import { StaffPage } from './features/staff/StaffPage'
 import { DashboardPage } from './features/dashboard/DashboardPage'
+import { MyDashboardPage } from './features/dashboard/MyDashboardPage'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -25,6 +26,7 @@ export function App() {
             <Route element={<RequireAuth />}>
               <Route element={<AppLayout />}>
                 <Route path="/schedule" element={<SchedulePage />} />
+                <Route path="/my-earnings" element={<MyDashboardPage />} />
 
                 <Route element={<RequireAuth roles={['ADMIN', 'MANAGER']} />}>
                   <Route path="/staff" element={<StaffPage />} />

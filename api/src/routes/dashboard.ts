@@ -2,8 +2,9 @@ import { Router } from 'express'
 import { Role } from '@prisma/client'
 import { loadCurrentUser, requireAuth, requireRole } from '../middleware/auth.js'
 import { prisma } from '../lib/prisma.js'
-import { payPeriodQuerySchema } from '../schemas.js'
-import { payPeriodRangeUtc } from '../lib/week.js'
+import { myEarningsQuerySchema, payPeriodQuerySchema } from '../schemas.js'
+import { dayRangeUtc, monthRangeUtc, payPeriodRangeUtc, weekRangeUtc } from '../lib/week.js'
+import { sumShifts } from '../lib/shiftMath.js'
 
 export const dashboardRouter = Router()
 
@@ -47,6 +48,34 @@ dashboardRouter.get('/payroll', requireRole(Role.ADMIN, Role.MANAGER), async (re
       .sort((a, b) => a.fullName.localeCompare(b.fullName))
 
     res.json({ periodStart: start.toISOString(), periodEnd: end.toISOString(), payroll })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// Any authenticated user's own Today / This Week / This Month hours and
+// earnings — a personal summary, not restricted to manager/admin.
+dashboardRouter.get('/me', async (req, res, next) => {
+  try {
+    const { dayStart, weekStart, weekAnchor, monthStart, monthDate } = myEarningsQuerySchema.parse(req.query)
+
+    const day = dayRangeUtc(dayStart)
+    const week = weekRangeUtc(weekAnchor ?? new Date().toISOString().slice(0, 10), weekStart)
+    const month = monthRangeUtc(monthDate, monthStart)
+
+    const [dayShifts, weekShifts, monthShifts] = await Promise.all([
+      prisma.shift.findMany({ where: { staffId: req.currentUser!.id, startsAt: { gte: day.start, lt: day.end } } }),
+      prisma.shift.findMany({ where: { staffId: req.currentUser!.id, startsAt: { gte: week.start, lt: week.end } } }),
+      prisma.shift.findMany({
+        where: { staffId: req.currentUser!.id, startsAt: { gte: month.start, lt: month.end } },
+      }),
+    ])
+
+    res.json({
+      today: sumShifts(dayShifts),
+      thisWeek: sumShifts(weekShifts),
+      thisMonth: sumShifts(monthShifts),
+    })
   } catch (err) {
     next(err)
   }

@@ -76,3 +76,18 @@ export const payPeriodQuerySchema = z.object({
   periodDate: localDateSchema.optional(),
   periodDateInstant: z.string().datetime().optional(),
 })
+
+export const myEarningsQuerySchema = z.object({
+  // The client's local midnight-today, local midnight-start-of-this-week,
+  // and local midnight-start-of-this-month, each as a true UTC instant —
+  // same client-computes-the-boundary pattern used everywhere else in this
+  // file, so Today/This Week/This Month line up with the staff member's own
+  // calendar rather than the server's. weekAnchor/monthDate are the
+  // corresponding local YYYY-MM-DD dates, used to derive the week's Monday
+  // and the month's boundaries correctly.
+  dayStart: z.string().datetime().optional(),
+  weekStart: z.string().datetime().optional(),
+  weekAnchor: localDateSchema.optional(),
+  monthStart: z.string().datetime().optional(),
+  monthDate: localDateSchema.optional(),
+})

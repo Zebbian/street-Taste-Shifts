@@ -6,6 +6,9 @@ import { StaffForm, type StaffFormValues } from './StaffForm'
 import { ManagerForm, type ManagerFormValues } from './ManagerForm'
 import { EditStaffForm, type EditStaffFormValues } from './EditStaffForm'
 import { Modal } from '../../components/Modal'
+import { ConfirmModal } from '../../components/ConfirmModal'
+import { Toast } from '../../components/Toast'
+import { useToast } from '../../lib/useToast'
 import { POSITION_LABELS } from '../../lib/positions'
 import { formatRateCents } from '../../lib/format'
 import { ApiError } from '../../lib/apiClient'
@@ -24,7 +27,9 @@ export function StaffPage() {
   const [showAddStaff, setShowAddStaff] = useState(false)
   const [showAddManager, setShowAddManager] = useState(false)
   const [editingMember, setEditingMember] = useState<User | null>(null)
+  const [reinviteTarget, setReinviteTarget] = useState<User | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
+  const { toastMessage, showToast, dismissToast } = useToast()
 
   async function handleAddStaff(values: StaffFormValues) {
     setFormError(null)
@@ -41,6 +46,7 @@ export function StaffPage() {
         hourlyRateCents: Math.round(dollars * 100),
       })
       setShowAddStaff(false)
+      showToast('Staff member added')
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : 'Failed to add staff member.')
     }
@@ -51,6 +57,7 @@ export function StaffPage() {
     try {
       await registerManager.mutateAsync(values)
       setShowAddManager(false)
+      showToast('Manager added')
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : 'Failed to add manager.')
     }
@@ -91,6 +98,7 @@ export function StaffPage() {
         },
       })
       setEditingMember(null)
+      showToast('Changes saved')
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : 'Failed to update staff member.')
     }
@@ -100,14 +108,29 @@ export function StaffPage() {
     await updateStaff.mutateAsync({ id, input: { role: currentRole === 'MANAGER' ? 'STAFF' : 'MANAGER' } })
   }
 
-  async function handleSendInvite(id: string, alreadyInvited: boolean) {
-    if (alreadyInvited && !confirm('Send another invite email to this person?')) return
+  async function sendInviteNow(id: string) {
     setFormError(null)
     try {
       await sendInvite.mutateAsync(id)
+      showToast('Invite sent')
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : 'Failed to send invite.')
     }
+  }
+
+  function handleSendInvite(member: User) {
+    if (member.inviteSentAt) {
+      setReinviteTarget(member)
+      return
+    }
+    sendInviteNow(member.id)
+  }
+
+  async function handleConfirmReinvite() {
+    if (!reinviteTarget) return
+    const id = reinviteTarget.id
+    setReinviteTarget(null)
+    await sendInviteNow(id)
   }
 
   const staffMembers = users?.filter((u) => u.role === 'STAFF') ?? []
@@ -181,7 +204,7 @@ export function StaffPage() {
                             Edit
                           </button>
                           <button
-                            onClick={() => handleSendInvite(manager.id, !!manager.inviteSentAt)}
+                            onClick={() => handleSendInvite(manager)}
                             className="text-xs text-brand-700 underline hover:text-brand-900"
                           >
                             {manager.inviteSentAt ? 'Resend invite' : 'Send invite'}
@@ -275,7 +298,7 @@ export function StaffPage() {
                           Edit
                         </button>
                         <button
-                          onClick={() => handleSendInvite(member.id, !!member.inviteSentAt)}
+                          onClick={() => handleSendInvite(member)}
                           className="text-xs text-brand-700 underline hover:text-brand-900"
                         >
                           {member.inviteSentAt ? 'Resend invite' : 'Send invite'}
@@ -331,6 +354,18 @@ export function StaffPage() {
           <EditStaffForm member={editingMember} onSubmit={handleEditStaff} onCancel={() => setEditingMember(null)} />
         </Modal>
       )}
+
+      {reinviteTarget && (
+        <ConfirmModal
+          title="Resend invite"
+          message={`Send another invite email to ${reinviteTarget.fullName}?`}
+          confirmLabel="Send invite"
+          onConfirm={handleConfirmReinvite}
+          onCancel={() => setReinviteTarget(null)}
+        />
+      )}
+
+      {toastMessage && <Toast message={toastMessage} onDismiss={dismissToast} />}
     </div>
   )
 }

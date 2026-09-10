@@ -45,6 +45,56 @@ function todayUtcParts(): [number, number, number] {
 }
 
 /**
+ * Given the caller's actual local start-of-day instant (midnight today, as a
+ * UTC timestamp computed by the client — same pattern as weekRangeUtc),
+ * returns the [start, start + 1 day) range to query. Omit for the server's
+ * current UTC day (not timezone-safe, local dev only).
+ */
+export function dayRangeUtc(explicitStart?: string): { start: Date; end: Date } {
+  let start: Date
+  if (explicitStart) {
+    start = new Date(explicitStart)
+  } else {
+    const now = new Date()
+    start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+  }
+  const end = new Date(start.getTime() + MS_PER_DAY)
+  return { start, end }
+}
+
+/**
+ * Given the caller's actual local start-of-month instant (midnight on the
+ * 1st, as a UTC timestamp computed by the client) and that date's
+ * YYYY-MM-DD, returns the [start, start-of-next-month) range to query.
+ */
+export function monthRangeUtc(localDate?: string, explicitStart?: string): { start: Date; end: Date } {
+  let start: Date
+  let year: number
+  let month: number // 0-indexed
+
+  if (localDate) {
+    const [y, m] = localDate.split('-').map(Number)
+    year = y!
+    month = m! - 1
+  } else {
+    const now = new Date()
+    year = now.getUTCFullYear()
+    month = now.getUTCMonth()
+  }
+
+  start = explicitStart ? new Date(explicitStart) : new Date(Date.UTC(year, month, 1))
+
+  // setUTCMonth preserves the time-of-day component, so adding one month to
+  // the client's "local midnight on the 1st" instant correctly lands on
+  // "local midnight on the 1st of next month" — same timezone-safety
+  // property as the week/pay-period ranges above.
+  const end = new Date(start)
+  end.setUTCMonth(end.getUTCMonth() + 1)
+
+  return { start, end }
+}
+
+/**
  * Given a YYYY-MM-DD anchor date and (optionally) the caller's actual local
  * start-of-week instant, returns the [start, start + 7 days) range to query.
  *

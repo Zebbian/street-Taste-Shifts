@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { useCreateShift, useDeleteShift, useShifts, useUpdateShift } from './useShifts'
 import { ShiftForm, type ShiftFormValues } from './ShiftForm'
 import { Modal } from '../../components/Modal'
+import { ConfirmModal } from '../../components/ConfirmModal'
+import { Toast } from '../../components/Toast'
+import { useToast } from '../../lib/useToast'
 import { addWeeks, formatWeekLabel, startOfWeekIso, toLocalDateKey, weekDays } from '../../lib/week'
-import { formatHours, formatRateCents, formatTimeRange, shiftHours } from '../../lib/format'
+import { formatCents, formatHours, formatRateCents, formatTimeRange, shiftHours } from '../../lib/format'
 import { POSITION_LABELS } from '../../lib/positions'
 import type { Shift } from '../../types/api'
 
@@ -25,6 +28,13 @@ function toTimeInputValue(iso: string): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
+function dayTotalCents(dayShifts: Shift[]): number {
+  return dayShifts.reduce(
+    (sum, shift) => sum + shiftHours(shift.startsAt, shift.endsAt) * shift.hourlyRateCentsSnapshot,
+    0
+  )
+}
+
 export function SchedulePage() {
   const { user } = useAuth()
   const isManager = user?.role === 'MANAGER' || user?.role === 'ADMIN'
@@ -33,9 +43,11 @@ export function SchedulePage() {
   const createShift = useCreateShift()
   const updateShift = useUpdateShift()
   const deleteShift = useDeleteShift()
+  const { toastMessage, showToast, dismissToast } = useToast()
 
   const [modalDate, setModalDate] = useState<string | null>(null)
   const [editingShift, setEditingShift] = useState<Shift | null>(null)
+  const [deletingShift, setDeletingShift] = useState<Shift | null>(null)
 
   const days = useMemo(() => weekDays(week), [week])
 
@@ -58,6 +70,7 @@ export function SchedulePage() {
       notes: values.notes || undefined,
     })
     setModalDate(null)
+    showToast('Shift added')
   }
 
   async function handleUpdate(values: ShiftFormValues) {
@@ -74,11 +87,14 @@ export function SchedulePage() {
       },
     })
     setEditingShift(null)
+    showToast('Shift updated')
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('Remove this shift?')) return
-    await deleteShift.mutateAsync(id)
+  async function handleConfirmDelete() {
+    if (!deletingShift) return
+    await deleteShift.mutateAsync(deletingShift.id)
+    setDeletingShift(null)
+    showToast('Shift removed')
   }
 
   return (
@@ -115,7 +131,7 @@ export function SchedulePage() {
             return (
               <div
                 key={key}
-                className={`rounded-xl border bg-white p-3 ${
+                className={`flex flex-col rounded-xl border bg-white p-3 ${
                   isToday ? 'border-gold-400 ring-1 ring-gold-400' : 'border-neutral-200'
                 }`}
               >
@@ -133,7 +149,7 @@ export function SchedulePage() {
                     </button>
                   )}
                 </div>
-                <div className="space-y-2">
+                <div className="flex-1 space-y-2">
                   {dayShifts.length === 0 && <p className="text-xs text-neutral-400">No shifts</p>}
                   {dayShifts.map((shift) => (
                     <div key={shift.id} className="rounded-lg border-l-2 border-brand-500 bg-brand-50 p-2 text-xs">
@@ -145,24 +161,32 @@ export function SchedulePage() {
                         {formatRateCents(shift.hourlyRateCentsSnapshot)}
                       </p>
                       {isManager && (
-                        <div className="mt-1 flex gap-2">
+                        <div className="mt-1 flex items-center justify-between">
                           <button
                             onClick={() => setEditingShift(shift)}
-                            className="text-brand-700 underline hover:text-brand-900"
+                            aria-label="Edit shift"
+                            className="rounded p-1 text-brand-700 hover:bg-brand-100 hover:text-brand-900"
                           >
-                            Edit
+                            <Pencil size={14} />
                           </button>
                           <button
-                            onClick={() => handleDelete(shift.id)}
-                            className="text-red-500 underline hover:text-red-700"
+                            onClick={() => setDeletingShift(shift)}
+                            aria-label="Remove shift"
+                            className="rounded p-1 text-red-500 hover:bg-red-100 hover:text-red-700"
                           >
-                            Remove
+                            <Trash2 size={14} />
                           </button>
                         </div>
                       )}
                     </div>
                   ))}
                 </div>
+                {isManager && dayShifts.length > 0 && (
+                  <div className="mt-2 border-t border-neutral-100 pt-2 text-xs">
+                    <span className="text-neutral-400">Day total </span>
+                    <span className="font-semibold text-ink-900">{formatCents(dayTotalCents(dayShifts))}</span>
+                  </div>
+                )}
               </div>
             )
           })}
@@ -199,6 +223,23 @@ export function SchedulePage() {
           />
         </Modal>
       )}
+
+      {deletingShift && (
+        <ConfirmModal
+          title="Remove shift"
+          message={`Remove ${deletingShift.staff.fullName}'s shift on ${new Intl.DateTimeFormat('en-US', {
+            weekday: 'long',
+            month: 'short',
+            day: 'numeric',
+          }).format(new Date(deletingShift.startsAt))}? This can't be undone.`}
+          confirmLabel="Remove shift"
+          danger
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeletingShift(null)}
+        />
+      )}
+
+      {toastMessage && <Toast message={toastMessage} onDismiss={dismissToast} />}
     </div>
   )
 }
