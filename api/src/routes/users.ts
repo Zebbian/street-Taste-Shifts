@@ -6,6 +6,7 @@ import { supabaseAdmin } from '../lib/supabaseAdmin.js'
 import { AppError } from '../lib/AppError.js'
 import { registerStaffSchema, registerManagerSchema, updateUserSchema } from '../schemas.js'
 import { requireParam } from '../lib/params.js'
+import { env } from '../env.js'
 
 export const usersRouter = Router()
 
@@ -30,8 +31,10 @@ usersRouter.get('/', requireRole(Role.ADMIN, Role.MANAGER), async (_req, res, ne
   }
 })
 
-// Creates a real Supabase Auth account (invite email, no manager-known password)
-// plus the corresponding app-level user row.
+// Creates a real Supabase Auth account (no email sent yet — see
+// POST /:id/send-invite) plus the corresponding app-level user row. No
+// manager-known password is ever set; the person sets their own once
+// invited.
 usersRouter.post('/register-staff', requireRole(Role.ADMIN, Role.MANAGER), async (req, res, next) => {
   try {
     const body = registerStaffSchema.parse(req.body)
@@ -39,11 +42,13 @@ usersRouter.post('/register-staff', requireRole(Role.ADMIN, Role.MANAGER), async
     const existing = await prisma.user.findUnique({ where: { email: body.email } })
     if (existing) throw AppError.conflict('A user with this email already exists')
 
-    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(body.email, {
-      data: { full_name: body.fullName, role: Role.STAFF },
+    const { data, error } = await supabaseAdmin.auth.admin.createUser({
+      email: body.email,
+      email_confirm: true,
+      user_metadata: { full_name: body.fullName, role: Role.STAFF },
     })
     if (error || !data.user) {
-      throw AppError.badRequest(error?.message ?? 'Failed to invite staff member', 'INVITE_FAILED')
+      throw AppError.badRequest(error?.message ?? 'Failed to create staff account', 'CREATE_FAILED')
     }
 
     const user = await prisma.user.create({
@@ -63,8 +68,7 @@ usersRouter.post('/register-staff', requireRole(Role.ADMIN, Role.MANAGER), async
   }
 })
 
-// Admin-only: invites a new manager account (same invite-by-email flow as
-// staff, no manager-known password).
+// Admin-only: creates a new manager account (no email sent yet, same as staff).
 usersRouter.post('/register-manager', requireRole(Role.ADMIN), async (req, res, next) => {
   try {
     const body = registerManagerSchema.parse(req.body)
@@ -72,11 +76,13 @@ usersRouter.post('/register-manager', requireRole(Role.ADMIN), async (req, res, 
     const existing = await prisma.user.findUnique({ where: { email: body.email } })
     if (existing) throw AppError.conflict('A user with this email already exists')
 
-    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(body.email, {
-      data: { full_name: body.fullName, role: Role.MANAGER },
+    const { data, error } = await supabaseAdmin.auth.admin.createUser({
+      email: body.email,
+      email_confirm: true,
+      user_metadata: { full_name: body.fullName, role: Role.MANAGER },
     })
     if (error || !data.user) {
-      throw AppError.badRequest(error?.message ?? 'Failed to invite manager', 'INVITE_FAILED')
+      throw AppError.badRequest(error?.message ?? 'Failed to create manager account', 'CREATE_FAILED')
     }
 
     const user = await prisma.user.create({
@@ -90,6 +96,32 @@ usersRouter.post('/register-manager', requireRole(Role.ADMIN), async (req, res, 
     })
 
     res.status(201).json({ user })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// Sends (or re-sends) the login invite email for an existing account. Can be
+// called any time — right after creation, or much later once the manager is
+// ready for that person to actually start logging in.
+usersRouter.post('/:id/send-invite', requireRole(Role.ADMIN, Role.MANAGER), async (req, res, next) => {
+  try {
+    const targetId = requireParam(req, 'id')
+    const target = await prisma.user.findUnique({ where: { id: targetId } })
+    if (!target) throw AppError.notFound('User not found')
+
+    // Managers may invite staff; only an admin may (re)invite a manager/admin.
+    if (target.role !== Role.STAFF && req.currentUser!.role !== Role.ADMIN) {
+      throw AppError.forbidden()
+    }
+
+    const { error } = await supabaseAdmin.auth.resetPasswordForEmail(target.email, {
+      redirectTo: `${env.CORS_ORIGIN}/accept-invite`,
+    })
+    if (error) throw AppError.badRequest(error.message, 'INVITE_FAILED')
+
+    const user = await prisma.user.update({ where: { id: targetId }, data: { inviteSentAt: new Date() } })
+    res.json({ user })
   } catch (err) {
     next(err)
   }

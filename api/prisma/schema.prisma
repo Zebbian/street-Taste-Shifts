@@ -33,6 +33,10 @@ model User {
   // hourlyRateCents. Leave null to opt this staff member out.
   sundayRateCents Int?
   active          Boolean  @default(true)
+  // Set when the manager/admin has triggered a login invite email for this
+  // account. Null means the account exists but nobody has been emailed yet
+  // — they can't log in until an invite is sent and they set a password.
+  inviteSentAt    DateTime?
   createdAt       DateTime @default(now())
 
   shifts         Shift[] @relation("StaffShifts")

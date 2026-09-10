@@ -41,7 +41,9 @@ export function StaffForm({
           {...register('email', { required: 'Email is required' })}
         />
         {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
-        <p className="mt-1 text-xs text-neutral-400">They'll receive an email invite to set their own password.</p>
+        <p className="mt-1 text-xs text-neutral-400">
+          No email is sent yet — you can send their login invite whenever you're ready, from the staff list.
+        </p>
       </div>
 
       <div>
@@ -83,7 +85,7 @@ export function StaffForm({
           disabled={isSubmitting}
           className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
         >
-          {isSubmitting ? 'Sending invite…' : 'Add staff member'}
+          {isSubmitting ? 'Adding…' : 'Add staff member'}
         </button>
       </div>
     </form>

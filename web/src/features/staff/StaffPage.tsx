@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
-import { useRegisterManager, useRegisterStaff, useStaffList, useUpdateStaff } from './useStaff'
+import { useRegisterManager, useRegisterStaff, useSendInvite, useStaffList, useUpdateStaff } from './useStaff'
 import { StaffForm, type StaffFormValues } from './StaffForm'
 import { ManagerForm, type ManagerFormValues } from './ManagerForm'
 import { EditStaffForm, type EditStaffFormValues } from './EditStaffForm'
@@ -19,6 +19,7 @@ export function StaffPage() {
   const registerStaff = useRegisterStaff()
   const registerManager = useRegisterManager()
   const updateStaff = useUpdateStaff()
+  const sendInvite = useSendInvite()
 
   const [showAddStaff, setShowAddStaff] = useState(false)
   const [showAddManager, setShowAddManager] = useState(false)
@@ -99,6 +100,16 @@ export function StaffPage() {
     await updateStaff.mutateAsync({ id, input: { role: currentRole === 'MANAGER' ? 'STAFF' : 'MANAGER' } })
   }
 
+  async function handleSendInvite(id: string, alreadyInvited: boolean) {
+    if (alreadyInvited && !confirm('Send another invite email to this person?')) return
+    setFormError(null)
+    try {
+      await sendInvite.mutateAsync(id)
+    } catch (err) {
+      setFormError(err instanceof ApiError ? err.message : 'Failed to send invite.')
+    }
+  }
+
   const staffMembers = users?.filter((u) => u.role === 'STAFF') ?? []
   const managers = users?.filter((u) => u.role === 'MANAGER') ?? []
 
@@ -120,7 +131,7 @@ export function StaffPage() {
             <p className="text-sm text-neutral-500">Loading managers…</p>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
-              <table className="w-full min-w-[600px] text-sm">
+              <table className="w-full min-w-[700px] text-sm">
                 <thead className="bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
                   <tr>
                     <th className="px-4 py-2">Name</th>
@@ -128,6 +139,7 @@ export function StaffPage() {
                     <th className="px-4 py-2">Rate</th>
                     <th className="px-4 py-2">Sunday rate</th>
                     <th className="px-4 py-2">Status</th>
+                    <th className="px-4 py-2">Invite</th>
                     <th className="px-4 py-2" />
                   </tr>
                 </thead>
@@ -151,6 +163,15 @@ export function StaffPage() {
                           {manager.active ? 'Active' : 'Deactivated'}
                         </span>
                       </td>
+                      <td className="px-4 py-2">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs ${
+                            manager.inviteSentAt ? 'bg-gold-100 text-gold-600' : 'bg-neutral-100 text-neutral-500'
+                          }`}
+                        >
+                          {manager.inviteSentAt ? 'Invited' : 'Not invited'}
+                        </span>
+                      </td>
                       <td className="px-4 py-2 text-right">
                         <div className="flex justify-end gap-3">
                           <button
@@ -158,6 +179,12 @@ export function StaffPage() {
                             className="text-xs text-neutral-500 underline hover:text-neutral-800"
                           >
                             Edit
+                          </button>
+                          <button
+                            onClick={() => handleSendInvite(manager.id, !!manager.inviteSentAt)}
+                            className="text-xs text-brand-700 underline hover:text-brand-900"
+                          >
+                            {manager.inviteSentAt ? 'Resend invite' : 'Send invite'}
                           </button>
                           <button
                             onClick={() => toggleManagerRole(manager.id, 'MANAGER')}
@@ -171,7 +198,7 @@ export function StaffPage() {
                   ))}
                   {managers.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
+                      <td colSpan={7} className="px-4 py-6 text-center text-neutral-400">
                         No other managers yet.
                       </td>
                     </tr>
@@ -198,7 +225,7 @@ export function StaffPage() {
           <p className="text-sm text-neutral-500">Loading staff…</p>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
-            <table className="w-full min-w-[680px] text-sm">
+            <table className="w-full min-w-[780px] text-sm">
               <thead className="bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
                 <tr>
                   <th className="px-4 py-2">Name</th>
@@ -206,6 +233,7 @@ export function StaffPage() {
                   <th className="px-4 py-2">Rate</th>
                   <th className="px-4 py-2">Sunday rate</th>
                   <th className="px-4 py-2">Status</th>
+                  <th className="px-4 py-2">Invite</th>
                   <th className="px-4 py-2" />
                 </tr>
               </thead>
@@ -229,6 +257,15 @@ export function StaffPage() {
                         {member.active ? 'Active' : 'Deactivated'}
                       </span>
                     </td>
+                    <td className="px-4 py-2">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs ${
+                          member.inviteSentAt ? 'bg-gold-100 text-gold-600' : 'bg-neutral-100 text-neutral-500'
+                        }`}
+                      >
+                        {member.inviteSentAt ? 'Invited' : 'Not invited'}
+                      </span>
+                    </td>
                     <td className="px-4 py-2 text-right">
                       <div className="flex justify-end gap-3">
                         <button
@@ -236,6 +273,12 @@ export function StaffPage() {
                           className="text-xs text-neutral-500 underline hover:text-neutral-800"
                         >
                           Edit
+                        </button>
+                        <button
+                          onClick={() => handleSendInvite(member.id, !!member.inviteSentAt)}
+                          className="text-xs text-brand-700 underline hover:text-brand-900"
+                        >
+                          {member.inviteSentAt ? 'Resend invite' : 'Send invite'}
                         </button>
                         {isAdmin && (
                           <button
@@ -257,7 +300,7 @@ export function StaffPage() {
                 ))}
                 {staffMembers.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
+                    <td colSpan={7} className="px-4 py-6 text-center text-neutral-400">
                       No staff yet — add your first team member.
                     </td>
                   </tr>

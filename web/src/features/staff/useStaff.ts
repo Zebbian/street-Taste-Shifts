@@ -55,3 +55,11 @@ export function useUpdateStaff() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
   })
 }
+
+export function useSendInvite() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => apiClient.post<{ user: User }>(`/api/users/${id}/send-invite`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
+  })
+}

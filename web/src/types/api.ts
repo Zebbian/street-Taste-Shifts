@@ -11,6 +11,7 @@ export interface User {
   hourlyRateCents: number | null
   sundayRateCents: number | null
   active: boolean
+  inviteSentAt: string | null
   createdAt: string
 }
 
