@@ -1,5 +1,5 @@
 import { forwardRef } from 'react'
-import { formatTimeRangeCompact } from '../../lib/format'
+import { formatTimeCompact } from '../../lib/format'
 import { toLocalDateKey } from '../../lib/week'
 import type { Shift } from '../../types/api'
 
@@ -33,14 +33,21 @@ export const ScheduleImage = forwardRef<HTMLDivElement, ScheduleImageProps>(func
 
   const rows = Array.from(staffByName.values()).sort((a, b) => a.name.localeCompare(b.name))
 
+  const CONTAINER_WIDTH = 1040
+  const CONTAINER_PADDING = 32
+  const NAME_COL_WIDTH = 140
+  const CONTENT_WIDTH = CONTAINER_WIDTH - CONTAINER_PADDING * 2
+  const DAY_COL_WIDTH = (CONTENT_WIDTH - NAME_COL_WIDTH) / 7
+
   return (
     <div
       ref={ref}
       style={{
-        width: '900px',
+        width: `${CONTAINER_WIDTH}px`,
         flexShrink: 0,
+        boxSizing: 'border-box',
         background: '#ffffff',
-        padding: '32px',
+        padding: `${CONTAINER_PADDING}px`,
         fontFamily: 'system-ui, sans-serif',
       }}
     >
@@ -50,7 +57,13 @@ export const ScheduleImage = forwardRef<HTMLDivElement, ScheduleImageProps>(func
       </div>
       <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '20px' }}>Schedule — {weekLabel}</div>
 
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+      <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', fontSize: '13px' }}>
+        <colgroup>
+          <col style={{ width: `${NAME_COL_WIDTH}px` }} />
+          {days.map((day) => (
+            <col key={toLocalDateKey(day)} style={{ width: `${DAY_COL_WIDTH}px` }} />
+          ))}
+        </colgroup>
         <thead>
           <tr>
             <th
@@ -69,10 +82,11 @@ export const ScheduleImage = forwardRef<HTMLDivElement, ScheduleImageProps>(func
                 key={toLocalDateKey(day)}
                 style={{
                   textAlign: 'center',
-                  padding: '10px 8px',
+                  padding: '10px 4px',
                   background: '#17190f',
                   color: '#ffffff',
                   borderTopRightRadius: i === days.length - 1 ? '8px' : undefined,
+                  overflow: 'hidden',
                 }}
               >
                 {new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(day)}
@@ -95,14 +109,24 @@ export const ScheduleImage = forwardRef<HTMLDivElement, ScheduleImageProps>(func
                   <td
                     key={toLocalDateKey(day)}
                     style={{
-                      padding: '10px 8px',
+                      padding: '10px 4px',
                       textAlign: 'center',
                       color: shift ? '#0c5527' : '#c7c7c7',
                       borderBottom: '1px solid #e5e5e5',
-                      whiteSpace: 'nowrap',
+                      fontSize: '12px',
+                      lineHeight: 1.4,
+                      wordBreak: 'break-word',
                     }}
                   >
-                    {shift ? formatTimeRangeCompact(shift.startsAt, shift.endsAt) : '—'}
+                    {shift ? (
+                      <>
+                        {formatTimeCompact(shift.startsAt)}
+                        <br />
+                        to {formatTimeCompact(shift.endsAt)}
+                      </>
+                    ) : (
+                      '—'
+                    )}
                   </td>
                 )
               })}
