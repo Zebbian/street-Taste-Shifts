@@ -30,6 +30,13 @@ function toTimeInputValue(iso: string): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
+function isIosSafari(): boolean {
+  const ua = navigator.userAgent
+  const isIos = /iPad|iPhone|iPod/.test(ua) || (ua.includes('Mac') && navigator.maxTouchPoints > 1)
+  const isSafariEngine = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua)
+  return isIos && isSafariEngine
+}
+
 function dayTotalCents(dayShifts: Shift[]): number {
   return dayShifts.reduce(
     (sum, shift) => sum + shiftHours(shift.startsAt, shift.endsAt) * shift.hourlyRateCentsSnapshot,
@@ -54,6 +61,7 @@ export function SchedulePage() {
   const [showExportPreview, setShowExportPreview] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const exportRef = useRef<HTMLDivElement>(null)
+  const canShareFiles = typeof navigator !== 'undefined' && 'canShare' in navigator && 'share' in navigator
 
   const days = useMemo(() => weekDays(week), [week])
 
@@ -112,13 +120,40 @@ export function SchedulePage() {
     if (!exportRef.current) return
     setIsExporting(true)
     try {
+      const filename = `street-taste-schedule-${week}.png`
       const dataUrl = await toPng(exportRef.current, { pixelRatio: 2, backgroundColor: '#ffffff', cacheBust: true })
+      const blob = await (await fetch(dataUrl)).blob()
+      const file = new File([blob], filename, { type: 'image/png' })
+
+      // iOS Safari (and most mobile browsers) can't reliably save a file via
+      // <a download> — it just opens the image instead of downloading it.
+      // Where the Web Share API is available, share the file directly: this
+      // lets the manager send it straight to WhatsApp from the share sheet,
+      // which is actually a better outcome than a plain download.
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: filename })
+        showToast('Schedule ready to share')
+        return
+      }
+
+      if (isIosSafari()) {
+        // No Web Share support (older iOS): open the image in a new tab so
+        // the manager can long-press → Save Image, since a forced download
+        // link doesn't work here either.
+        window.open(dataUrl, '_blank')
+        showToast('Long-press the image to save it')
+        return
+      }
+
       const link = document.createElement('a')
-      link.download = `street-taste-schedule-${week}.png`
+      link.download = filename
       link.href = dataUrl
       link.click()
       showToast('Schedule downloaded')
     } catch (err) {
+      // The user cancelling the native share sheet also throws — don't show
+      // an error toast for that, it's not a failure.
+      if (err instanceof Error && err.name === 'AbortError') return
       console.error('Failed to generate schedule image:', err)
       showToast('Could not generate the schedule image')
     } finally {
@@ -291,6 +326,7 @@ export function SchedulePage() {
 
       {showExportPreview && (
         <Modal title="Schedule preview" onClose={() => setShowExportPreview(false)} wide>
+          <p className="mb-2 text-xs text-neutral-400 sm:hidden">Scroll sideways to see the full week →</p>
           <div className="overflow-x-auto rounded-lg border border-neutral-200">
             <ScheduleImage ref={exportRef} weekLabel={formatWeekLabel(week)} days={days} shiftsByDay={shiftsByDay} />
           </div>
@@ -309,7 +345,7 @@ export function SchedulePage() {
               className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
             >
               <Download size={16} />
-              {isExporting ? 'Preparing…' : 'Download PNG'}
+              {isExporting ? 'Preparing…' : canShareFiles ? 'Share schedule' : 'Download PNG'}
             </button>
           </div>
         </Modal>
