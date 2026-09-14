@@ -51,6 +51,7 @@ export function SchedulePage() {
   const [modalDate, setModalDate] = useState<string | null>(null)
   const [editingShift, setEditingShift] = useState<Shift | null>(null)
   const [deletingShift, setDeletingShift] = useState<Shift | null>(null)
+  const [showExportPreview, setShowExportPreview] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const exportRef = useRef<HTMLDivElement>(null)
 
@@ -111,13 +112,7 @@ export function SchedulePage() {
     if (!exportRef.current) return
     setIsExporting(true)
     try {
-      const node = exportRef.current
-      // The first capture can come back blank if the browser hasn't finished
-      // painting the (visually offscreen) node yet — a known html-to-image
-      // quirk. Rendering once and discarding it "warms up" the clone before
-      // the real capture.
-      await toPng(node, { pixelRatio: 2, backgroundColor: '#ffffff' })
-      const dataUrl = await toPng(node, { pixelRatio: 2, backgroundColor: '#ffffff' })
+      const dataUrl = await toPng(exportRef.current, { pixelRatio: 2, backgroundColor: '#ffffff', cacheBust: true })
       const link = document.createElement('a')
       link.download = `street-taste-schedule-${week}.png`
       link.href = dataUrl
@@ -155,12 +150,11 @@ export function SchedulePage() {
           </div>
           {isManager && (
             <button
-              onClick={handleDownloadSchedule}
-              disabled={isExporting}
-              className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+              onClick={() => setShowExportPreview(true)}
+              className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
             >
               <Download size={16} />
-              {isExporting ? 'Preparing…' : 'Download schedule'}
+              Download schedule
             </button>
           )}
         </div>
@@ -295,7 +289,31 @@ export function SchedulePage() {
 
       {toastMessage && <Toast message={toastMessage} onDismiss={dismissToast} />}
 
-      {isManager && <ScheduleImage ref={exportRef} weekLabel={formatWeekLabel(week)} days={days} shiftsByDay={shiftsByDay} />}
+      {showExportPreview && (
+        <Modal title="Schedule preview" onClose={() => setShowExportPreview(false)} wide>
+          <div className="overflow-x-auto rounded-lg border border-neutral-200">
+            <ScheduleImage ref={exportRef} weekLabel={formatWeekLabel(week)} days={days} shiftsByDay={shiftsByDay} />
+          </div>
+          <div className="mt-4 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setShowExportPreview(false)}
+              className="rounded-lg px-4 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-100"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadSchedule}
+              disabled={isExporting}
+              className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+            >
+              <Download size={16} />
+              {isExporting ? 'Preparing…' : 'Download PNG'}
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

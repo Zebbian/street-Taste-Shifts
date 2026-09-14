@@ -10,11 +10,11 @@ interface ScheduleImageProps {
 }
 
 /**
- * Off-screen (rendered but not visible) printable version of the week's
- * schedule, one row per staff member with Mon–Sun columns — captured to a
- * PNG for the manager to share over WhatsApp. Kept deliberately separate
- * from the interactive schedule grid: no edit/delete controls, no rates,
- * plain text staff can read on any phone.
+ * Printable version of the week's schedule, one row per staff member with
+ * Mon–Sun columns — shown in a preview modal and captured to a PNG for the
+ * manager to share over WhatsApp. Deliberately separate from the
+ * interactive schedule grid: no edit/delete controls, no rates, just names
+ * and times, readable at a glance on any phone.
  */
 export const ScheduleImage = forwardRef<HTMLDivElement, ScheduleImageProps>(function ScheduleImage(
   { weekLabel, days, shiftsByDay },
@@ -36,17 +36,12 @@ export const ScheduleImage = forwardRef<HTMLDivElement, ScheduleImageProps>(func
   return (
     <div
       ref={ref}
-      aria-hidden="true"
       style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        transform: 'translateX(-100%) translateX(-100px)',
         width: '900px',
+        maxWidth: '100%',
         background: '#ffffff',
         padding: '32px',
         fontFamily: 'system-ui, sans-serif',
-        pointerEvents: 'none',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
