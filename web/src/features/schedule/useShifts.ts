@@ -49,3 +49,16 @@ export function useDeleteShift() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['shifts'] }),
   })
 }
+
+export function useRefreshShiftRate() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, localDate }: { id: string; localDate: string }) =>
+      apiClient.post<{ shift: Shift }>(`/api/shifts/${id}/refresh-rate`, { localDate }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shifts'] })
+      queryClient.invalidateQueries({ queryKey: ['payroll'] })
+      queryClient.invalidateQueries({ queryKey: ['my-earnings'] })
+    },
+  })
+}

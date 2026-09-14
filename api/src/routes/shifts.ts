@@ -3,7 +3,7 @@ import { Role } from '@prisma/client'
 import { loadCurrentUser, requireAuth, requireRole } from '../middleware/auth.js'
 import { prisma } from '../lib/prisma.js'
 import { AppError } from '../lib/AppError.js'
-import { createShiftSchema, updateShiftSchema, weekQuerySchema } from '../schemas.js'
+import { createShiftSchema, refreshShiftRateSchema, updateShiftSchema, weekQuerySchema } from '../schemas.js'
 import { isSundayDate, weekRangeUtc } from '../lib/week.js'
 import { requireParam } from '../lib/params.js'
 import type { User } from '@prisma/client'
@@ -109,6 +109,37 @@ shiftsRouter.patch('/:id', requireRole(Role.ADMIN, Role.MANAGER), async (req, re
         endsAt: body.endsAt ? new Date(body.endsAt) : undefined,
         hourlyRateCentsSnapshot,
       },
+      include: { staff: { select: { id: true, fullName: true, position: true } } },
+    })
+
+    res.json({ shift })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// Re-derives hourlyRateCentsSnapshot from the staff member's current rates
+// (hourlyRateCents / sundayRateCents), without changing anything else about
+// the shift. For when the rate was edited after the shift was already
+// created — shifts otherwise never pick up rate changes retroactively, by
+// design, so this is an explicit action rather than something automatic.
+shiftsRouter.post('/:id/refresh-rate', requireRole(Role.ADMIN, Role.MANAGER), async (req, res, next) => {
+  try {
+    const shiftId = requireParam(req, 'id')
+    const body = refreshShiftRateSchema.parse(req.body)
+
+    const existing = await prisma.shift.findUnique({ where: { id: shiftId } })
+    if (!existing) throw AppError.notFound('Shift not found')
+
+    const staff = await prisma.user.findUnique({ where: { id: existing.staffId } })
+    if (!staff || !staff.active) throw AppError.badRequest('Staff member not found or inactive')
+
+    const rate = rateForShift(staff, body.localDate)
+    if (rate == null) throw AppError.badRequest('Staff member has no hourly rate set')
+
+    const shift = await prisma.shift.update({
+      where: { id: shiftId },
+      data: { hourlyRateCentsSnapshot: rate },
       include: { staff: { select: { id: true, fullName: true, position: true } } },
     })
 

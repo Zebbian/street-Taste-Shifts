@@ -47,7 +47,7 @@ export const updateUserSchema = z
 // from startsAt/endsAt (which are UTC instants) because deriving local
 // day-of-week from a UTC timestamp requires knowing the restaurant's
 // timezone, which the server doesn't track.
-const localDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'localDate must be YYYY-MM-DD')
+export const localDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'localDate must be YYYY-MM-DD')
 
 export const createShiftSchema = z
   .object({
@@ -62,6 +62,10 @@ export const createShiftSchema = z
     message: 'endsAt must be after startsAt',
     path: ['endsAt'],
   })
+
+export const refreshShiftRateSchema = z.object({
+  localDate: localDateSchema,
+})
 
 export const updateShiftSchema = z
   .object({

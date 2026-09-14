@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
-import { useCreateShift, useDeleteShift, useShifts, useUpdateShift } from './useShifts'
+import { useCreateShift, useDeleteShift, useRefreshShiftRate, useShifts, useUpdateShift } from './useShifts'
 import { ShiftForm, type ShiftFormValues } from './ShiftForm'
 import { Modal } from '../../components/Modal'
 import { ConfirmModal } from '../../components/ConfirmModal'
@@ -43,6 +43,7 @@ export function SchedulePage() {
   const createShift = useCreateShift()
   const updateShift = useUpdateShift()
   const deleteShift = useDeleteShift()
+  const refreshShiftRate = useRefreshShiftRate()
   const { toastMessage, showToast, dismissToast } = useToast()
 
   const [modalDate, setModalDate] = useState<string | null>(null)
@@ -95,6 +96,11 @@ export function SchedulePage() {
     await deleteShift.mutateAsync(deletingShift.id)
     setDeletingShift(null)
     showToast('Shift removed')
+  }
+
+  async function handleRefreshRate(shift: Shift) {
+    await refreshShiftRate.mutateAsync({ id: shift.id, localDate: toDateInputValue(shift.startsAt) })
+    showToast('Rate refreshed')
   }
 
   return (
@@ -168,6 +174,14 @@ export function SchedulePage() {
                             className="rounded p-1 text-brand-700 hover:bg-brand-100 hover:text-brand-900"
                           >
                             <Pencil size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleRefreshRate(shift)}
+                            aria-label="Refresh rate from staff member's current pay rate"
+                            title="Refresh rate"
+                            className="rounded p-1 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-800"
+                          >
+                            <RefreshCw size={14} />
                           </button>
                           <button
                             onClick={() => setDeletingShift(shift)}
