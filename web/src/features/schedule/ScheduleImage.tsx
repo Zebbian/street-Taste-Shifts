@@ -38,7 +38,7 @@ export const ScheduleImage = forwardRef<HTMLDivElement, ScheduleImageProps>(func
       ref={ref}
       style={{
         width: '900px',
-        maxWidth: '100%',
+        flexShrink: 0,
         background: '#ffffff',
         padding: '32px',
         fontFamily: 'system-ui, sans-serif',
