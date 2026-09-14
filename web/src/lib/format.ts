@@ -3,6 +3,20 @@ export function formatTimeRange(startsAt: string, endsAt: string): string {
   return `${fmt.format(new Date(startsAt))} – ${fmt.format(new Date(endsAt))}`
 }
 
+/** Compact time like "4pm" or "4:30pm" — no leading zero, no minutes when they're :00. */
+export function formatTimeCompact(iso: string): string {
+  const d = new Date(iso)
+  const hours24 = d.getHours()
+  const minutes = d.getMinutes()
+  const period = hours24 >= 12 ? 'pm' : 'am'
+  const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12
+  return minutes === 0 ? `${hours12}${period}` : `${hours12}:${String(minutes).padStart(2, '0')}${period}`
+}
+
+export function formatTimeRangeCompact(startsAt: string, endsAt: string): string {
+  return `${formatTimeCompact(startsAt)} to ${formatTimeCompact(endsAt)}`
+}
+
 export function formatDate(iso: string): string {
   return new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).format(
     new Date(iso)

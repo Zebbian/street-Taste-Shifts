@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
+import { toPng } from 'html-to-image'
+import { ChevronLeft, ChevronRight, Download, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { useCreateShift, useDeleteShift, useRefreshShiftRate, useShifts, useUpdateShift } from './useShifts'
 import { ShiftForm, type ShiftFormValues } from './ShiftForm'
+import { ScheduleImage } from './ScheduleImage'
 import { Modal } from '../../components/Modal'
 import { ConfirmModal } from '../../components/ConfirmModal'
 import { Toast } from '../../components/Toast'
@@ -49,6 +51,8 @@ export function SchedulePage() {
   const [modalDate, setModalDate] = useState<string | null>(null)
   const [editingShift, setEditingShift] = useState<Shift | null>(null)
   const [deletingShift, setDeletingShift] = useState<Shift | null>(null)
+  const [isExporting, setIsExporting] = useState(false)
+  const exportRef = useRef<HTMLDivElement>(null)
 
   const days = useMemo(() => weekDays(week), [week])
 
@@ -103,26 +107,55 @@ export function SchedulePage() {
     showToast('Rate refreshed')
   }
 
+  async function handleDownloadSchedule() {
+    if (!exportRef.current) return
+    setIsExporting(true)
+    try {
+      const dataUrl = await toPng(exportRef.current, { pixelRatio: 2, backgroundColor: '#ffffff' })
+      const link = document.createElement('a')
+      link.download = `street-taste-schedule-${week}.png`
+      link.href = dataUrl
+      link.click()
+      showToast('Schedule downloaded')
+    } catch {
+      showToast('Could not generate the schedule image')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-lg font-semibold text-neutral-900">Schedule</h1>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setWeek((w) => addWeeks(w, -1))}
-            className="rounded-lg p-1.5 text-neutral-500 hover:bg-brand-50 hover:text-brand-700"
-            aria-label="Previous week"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <span className="w-36 text-center text-sm font-medium text-neutral-700">{formatWeekLabel(week)}</span>
-          <button
-            onClick={() => setWeek((w) => addWeeks(w, 1))}
-            className="rounded-lg p-1.5 text-neutral-500 hover:bg-brand-50 hover:text-brand-700"
-            aria-label="Next week"
-          >
-            <ChevronRight size={18} />
-          </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setWeek((w) => addWeeks(w, -1))}
+              className="rounded-lg p-1.5 text-neutral-500 hover:bg-brand-50 hover:text-brand-700"
+              aria-label="Previous week"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <span className="w-36 text-center text-sm font-medium text-neutral-700">{formatWeekLabel(week)}</span>
+            <button
+              onClick={() => setWeek((w) => addWeeks(w, 1))}
+              className="rounded-lg p-1.5 text-neutral-500 hover:bg-brand-50 hover:text-brand-700"
+              aria-label="Next week"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+          {isManager && (
+            <button
+              onClick={handleDownloadSchedule}
+              disabled={isExporting}
+              className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+            >
+              <Download size={16} />
+              {isExporting ? 'Preparing…' : 'Download schedule'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -254,6 +287,8 @@ export function SchedulePage() {
       )}
 
       {toastMessage && <Toast message={toastMessage} onDismiss={dismissToast} />}
+
+      {isManager && <ScheduleImage ref={exportRef} weekLabel={formatWeekLabel(week)} days={days} shiftsByDay={shiftsByDay} />}
     </div>
   )
 }
