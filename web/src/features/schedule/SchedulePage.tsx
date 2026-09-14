@@ -111,13 +111,20 @@ export function SchedulePage() {
     if (!exportRef.current) return
     setIsExporting(true)
     try {
-      const dataUrl = await toPng(exportRef.current, { pixelRatio: 2, backgroundColor: '#ffffff' })
+      const node = exportRef.current
+      // The first capture can come back blank if the browser hasn't finished
+      // painting the (visually offscreen) node yet — a known html-to-image
+      // quirk. Rendering once and discarding it "warms up" the clone before
+      // the real capture.
+      await toPng(node, { pixelRatio: 2, backgroundColor: '#ffffff' })
+      const dataUrl = await toPng(node, { pixelRatio: 2, backgroundColor: '#ffffff' })
       const link = document.createElement('a')
       link.download = `street-taste-schedule-${week}.png`
       link.href = dataUrl
       link.click()
       showToast('Schedule downloaded')
-    } catch {
+    } catch (err) {
+      console.error('Failed to generate schedule image:', err)
       showToast('Could not generate the schedule image')
     } finally {
       setIsExporting(false)

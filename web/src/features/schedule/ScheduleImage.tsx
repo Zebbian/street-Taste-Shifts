@@ -36,14 +36,17 @@ export const ScheduleImage = forwardRef<HTMLDivElement, ScheduleImageProps>(func
   return (
     <div
       ref={ref}
+      aria-hidden="true"
       style={{
-        position: 'fixed',
+        position: 'absolute',
         top: 0,
-        left: '-9999px',
+        left: 0,
+        transform: 'translateX(-100%) translateX(-100px)',
         width: '900px',
         background: '#ffffff',
         padding: '32px',
         fontFamily: 'system-ui, sans-serif',
+        pointerEvents: 'none',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
