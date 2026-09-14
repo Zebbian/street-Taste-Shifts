@@ -3,7 +3,7 @@ import { apiClient } from '../../lib/apiClient'
 import type { Position, User } from '../../types/api'
 
 export interface RegisterStaffInput {
-  email: string
+  email?: string
   fullName: string
   position: Position
   hourlyRateCents: number
@@ -60,6 +60,15 @@ export function useSendInvite() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => apiClient.post<{ user: User }>(`/api/users/${id}/send-invite`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
+  })
+}
+
+export function useSetEmail() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, email }: { id: string; email: string }) =>
+      apiClient.patch<{ user: User }>(`/api/users/${id}/email`, { email }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
   })
 }

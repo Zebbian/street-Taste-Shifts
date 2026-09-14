@@ -3,7 +3,7 @@ import { STAFF_POSITIONS, POSITION_LABELS } from '../../lib/positions'
 import type { Position } from '../../types/api'
 
 export interface StaffFormValues {
-  email: string
+  email?: string
   fullName: string
   position: Position
   hourlyRate: string
@@ -34,15 +34,16 @@ export function StaffForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-neutral-700">Email</label>
+        <label className="block text-sm font-medium text-neutral-700">Email (optional)</label>
         <input
           type="email"
           className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-          {...register('email', { required: 'Email is required' })}
+          {...register('email')}
         />
         {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
         <p className="mt-1 text-xs text-neutral-400">
-          No email is sent yet — you can send their login invite whenever you're ready, from the staff list.
+          Leave blank if this person won't log in for now — you can add their email and send an invite later
+          from the staff list. No email is sent right away either way.
         </p>
       </div>
 

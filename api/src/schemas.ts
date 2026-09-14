@@ -3,10 +3,17 @@ import { z } from 'zod'
 export const positionSchema = z.enum(['HOST', 'WAITRESS', 'BARTENDER', 'RUNNER', 'MANAGER'])
 
 export const registerStaffSchema = z.object({
-  email: z.string().email(),
+  // Optional: a staff member can exist purely as a schedule/payroll record
+  // with no login capability. An email (and the real Supabase Auth account
+  // it creates) can be added later via PATCH /:id/email.
+  email: z.string().email().optional(),
   fullName: z.string().min(1).max(120),
   position: positionSchema,
   hourlyRateCents: z.number().int().positive().max(1_000_000),
+})
+
+export const setEmailSchema = z.object({
+  email: z.string().email(),
 })
 
 export const registerManagerSchema = z.object({

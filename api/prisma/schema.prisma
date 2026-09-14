@@ -22,8 +22,12 @@ enum Position {
 }
 
 model User {
-  id              String   @id @db.Uuid
-  email           String   @unique
+  id              String   @id @default(uuid()) @db.Uuid
+  // The corresponding Supabase Auth user's id. Null until an email is set
+  // and the account is created for real — a staff member can exist purely
+  // as a schedule/payroll record with no login capability at all.
+  authId          String?  @unique @db.Uuid
+  email           String?  @unique
   fullName        String
   role            Role     @default(STAFF)
   position        Position @default(WAITRESS)

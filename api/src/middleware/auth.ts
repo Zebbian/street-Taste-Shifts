@@ -49,7 +49,7 @@ export async function loadCurrentUser(req: Request, _res: Response, next: NextFu
   try {
     if (!req.auth) throw AppError.unauthorized()
 
-    const user = await prisma.user.findUnique({ where: { id: req.auth.id } })
+    const user = await prisma.user.findUnique({ where: { authId: req.auth.id } })
     if (!user) throw AppError.unauthorized('No account found for this session')
     if (!user.active) throw AppError.forbidden('This account has been deactivated')
 

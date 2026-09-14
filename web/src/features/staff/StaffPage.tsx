@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
-import { useRegisterManager, useRegisterStaff, useSendInvite, useStaffList, useUpdateStaff } from './useStaff'
+import { useRegisterManager, useRegisterStaff, useSendInvite, useSetEmail, useStaffList, useUpdateStaff } from './useStaff'
 import { StaffForm, type StaffFormValues } from './StaffForm'
 import { ManagerForm, type ManagerFormValues } from './ManagerForm'
 import { EditStaffForm, type EditStaffFormValues } from './EditStaffForm'
+import { AddEmailForm, type AddEmailFormValues } from './AddEmailForm'
 import { Modal } from '../../components/Modal'
 import { ConfirmModal } from '../../components/ConfirmModal'
 import { Toast } from '../../components/Toast'
@@ -23,11 +24,13 @@ export function StaffPage() {
   const registerManager = useRegisterManager()
   const updateStaff = useUpdateStaff()
   const sendInvite = useSendInvite()
+  const setEmail = useSetEmail()
 
   const [showAddStaff, setShowAddStaff] = useState(false)
   const [showAddManager, setShowAddManager] = useState(false)
   const [editingMember, setEditingMember] = useState<User | null>(null)
   const [reinviteTarget, setReinviteTarget] = useState<User | null>(null)
+  const [addingEmailFor, setAddingEmailFor] = useState<User | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
   const { toastMessage, showToast, dismissToast } = useToast()
 
@@ -131,6 +134,18 @@ export function StaffPage() {
     const id = reinviteTarget.id
     setReinviteTarget(null)
     await sendInviteNow(id)
+  }
+
+  async function handleAddEmail(values: AddEmailFormValues) {
+    if (!addingEmailFor) return
+    setFormError(null)
+    try {
+      await setEmail.mutateAsync({ id: addingEmailFor.id, email: values.email })
+      setAddingEmailFor(null)
+      showToast('Email added')
+    } catch (err) {
+      setFormError(err instanceof ApiError ? err.message : 'Failed to add email.')
+    }
   }
 
   const staffMembers = users?.filter((u) => u.role === 'STAFF') ?? []
@@ -248,10 +263,11 @@ export function StaffPage() {
           <p className="text-sm text-neutral-500">Loading staff…</p>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
-            <table className="w-full min-w-[780px] text-sm">
+            <table className="w-full min-w-[880px] text-sm">
               <thead className="bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
                 <tr>
                   <th className="px-4 py-2">Name</th>
+                  <th className="px-4 py-2">Email</th>
                   <th className="px-4 py-2">Position</th>
                   <th className="px-4 py-2">Rate</th>
                   <th className="px-4 py-2">Sunday rate</th>
@@ -264,6 +280,7 @@ export function StaffPage() {
                 {staffMembers.map((member) => (
                   <tr key={member.id} className="border-t border-neutral-100">
                     <td className="px-4 py-2 font-medium text-neutral-800">{member.fullName}</td>
+                    <td className="px-4 py-2 text-neutral-600">{member.email ?? '—'}</td>
                     <td className="px-4 py-2 text-neutral-600">{POSITION_LABELS[member.position]}</td>
                     <td className="px-4 py-2 text-neutral-600">
                       {member.hourlyRateCents != null ? formatRateCents(member.hourlyRateCents) : '—'}
@@ -283,10 +300,14 @@ export function StaffPage() {
                     <td className="px-4 py-2">
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs ${
-                          member.inviteSentAt ? 'bg-gold-100 text-gold-600' : 'bg-neutral-100 text-neutral-500'
+                          member.inviteSentAt
+                            ? 'bg-gold-100 text-gold-600'
+                            : member.email
+                              ? 'bg-neutral-100 text-neutral-500'
+                              : 'bg-neutral-100 text-neutral-400'
                         }`}
                       >
-                        {member.inviteSentAt ? 'Invited' : 'Not invited'}
+                        {member.inviteSentAt ? 'Invited' : member.email ? 'Not invited' : 'No email'}
                       </span>
                     </td>
                     <td className="px-4 py-2 text-right">
@@ -297,12 +318,21 @@ export function StaffPage() {
                         >
                           Edit
                         </button>
-                        <button
-                          onClick={() => handleSendInvite(member)}
-                          className="text-xs text-brand-700 underline hover:text-brand-900"
-                        >
-                          {member.inviteSentAt ? 'Resend invite' : 'Send invite'}
-                        </button>
+                        {member.email ? (
+                          <button
+                            onClick={() => handleSendInvite(member)}
+                            className="text-xs text-brand-700 underline hover:text-brand-900"
+                          >
+                            {member.inviteSentAt ? 'Resend invite' : 'Send invite'}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setAddingEmailFor(member)}
+                            className="text-xs text-brand-700 underline hover:text-brand-900"
+                          >
+                            Add email
+                          </button>
+                        )}
                         {isAdmin && (
                           <button
                             onClick={() => toggleManagerRole(member.id, 'STAFF')}
@@ -323,7 +353,7 @@ export function StaffPage() {
                 ))}
                 {staffMembers.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-4 py-6 text-center text-neutral-400">
+                    <td colSpan={8} className="px-4 py-6 text-center text-neutral-400">
                       No staff yet — add your first team member.
                     </td>
                   </tr>
@@ -352,6 +382,17 @@ export function StaffPage() {
         <Modal title={`Edit ${editingMember.fullName}`} onClose={() => setEditingMember(null)}>
           {formError && <p className="mb-3 text-sm text-red-600">{formError}</p>}
           <EditStaffForm member={editingMember} onSubmit={handleEditStaff} onCancel={() => setEditingMember(null)} />
+        </Modal>
+      )}
+
+      {addingEmailFor && (
+        <Modal title={`Add email for ${addingEmailFor.fullName}`} onClose={() => setAddingEmailFor(null)}>
+          {formError && <p className="mb-3 text-sm text-red-600">{formError}</p>}
+          <AddEmailForm
+            fullName={addingEmailFor.fullName}
+            onSubmit={handleAddEmail}
+            onCancel={() => setAddingEmailFor(null)}
+          />
         </Modal>
       )}
 

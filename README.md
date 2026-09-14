@@ -43,15 +43,15 @@ npm install
 Copy `.env.example` to `.env` and fill in `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_JWKS_URL`,
 and `DATABASE_URL` (the direct connection string, with your real database password substituted in).
 
-Then apply the schema and seed demo accounts:
+Then apply the schema:
 
 ```bash
 npx prisma migrate dev --name init
-npm run seed
 ```
 
-The seed script creates one manager and three staff accounts (via Supabase's invite-by-email flow —
-they'll receive an email to set their own password; no shared demo password).
+The first admin account has to be created directly in the database (there's no signup flow — accounts
+are only created by an existing admin/manager from inside the app). Create your Supabase Auth user
+normally, then insert a matching row in the `users` table with `role = 'ADMIN'`.
 
 Run the API:
 

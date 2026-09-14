@@ -4,7 +4,7 @@ export type Position = 'HOST' | 'WAITRESS' | 'BARTENDER' | 'RUNNER' | 'MANAGER'
 
 export interface User {
   id: string
-  email: string
+  email: string | null
   fullName: string
   role: Role
   position: Position
