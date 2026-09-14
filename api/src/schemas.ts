@@ -5,8 +5,15 @@ export const positionSchema = z.enum(['HOST', 'WAITRESS', 'BARTENDER', 'RUNNER',
 export const registerStaffSchema = z.object({
   // Optional: a staff member can exist purely as a schedule/payroll record
   // with no login capability. An email (and the real Supabase Auth account
-  // it creates) can be added later via PATCH /:id/email.
-  email: z.string().email().optional(),
+  // it creates) can be added later via PATCH /:id/email. Accepts an empty
+  // string as "no email" too, since form inputs left blank submit '' rather
+  // than omitting the field.
+  email: z
+    .string()
+    .email()
+    .optional()
+    .or(z.literal(''))
+    .transform((v) => (v ? v : undefined)),
   fullName: z.string().min(1).max(120),
   position: positionSchema,
   hourlyRateCents: z.number().int().positive().max(1_000_000),

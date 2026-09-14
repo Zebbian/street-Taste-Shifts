@@ -42,8 +42,9 @@ export function StaffPage() {
       return
     }
     try {
+      const email = values.email?.trim()
       await registerStaff.mutateAsync({
-        email: values.email,
+        email: email ? email : undefined,
         fullName: values.fullName,
         position: values.position,
         hourlyRateCents: Math.round(dollars * 100),
